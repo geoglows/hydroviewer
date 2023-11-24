@@ -1,0 +1,63 @@
+{% extends "tethys_apps/app_no_actions.html" %}
+{% load tethys_gizmos %}
+{% load static %}
+
+{% block title %}GEOGloWS Hydroviewer{% endblock %}
+
+{% block header_buttons %}
+{% endblock %}
+
+{% block app_icon %}
+  <img alt="app icon" src="{% static tethys_app.icon %}"/>
+{% endblock %}
+
+{% block app_navigation_items %}
+  <hr>
+  <label class="control-label" for="time-slider">Map Animation</label>
+  <input type="range" min="0" max="40" value="0" class="slider" id="time-slider">
+  <li class="nav-item" id="current-map-date" style="text-align: center"></li>
+  <div style="text-align: center;">
+    <button class="btn btn-outline-secondary animatebtn" id="animationBack1"><i class="bi bi-chevron-left"></i></button>
+    <button class="btn btn-outline-secondary animatebtn" id="animationPlay"><i class="bi bi-play-fill"></i></button>
+    <button class="btn btn-outline-secondary animatebtn" id="animationStop"><i class="bi bi-stop-fill"></i></button>
+    <button class="btn btn-outline-secondary animatebtn" id="animationPlus1"><i class="bi bi-chevron-right"></i>
+    </button>
+  </div>
+  <hr>
+  <a role="button" class="btn btn-light mybtn" data-bs-toggle="modal" data-bs-target="#chart_modal">Show Charts</a>
+  <a class="btn btn-light mybtn" role="button" onclick="app.findReachID()">Find River by ID</a>
+  <a class="btn btn-light mybtn" role="button" onclick="app.findLatLon()">Zoom to Lat/Lon</a>
+  <a class="btn btn-light mybtn" role="button" onclick="app.clearMarkers()">Remove Map Marker</a>
+  <hr>
+  <a role="button" class="btn btn-light mybtn" data-bs-toggle="modal" data-bs-target="#about_modal">About Map Data</a>
+
+{% endblock %}
+
+{% block app_content %}
+{% endblock %}
+
+{% block app_actions %}
+{% endblock %}
+
+{% block content_dependent_styles %}
+  {{ block.super }}
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script>
+      const loading_gif = "{% static 'hydroviewer/images/progress_bar.gif' %}"
+  </script>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3K5B8H0KHJ"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+
+      function gtag() {
+          dataLayer.push(arguments);
+      }
+
+      gtag('js', new Date());
+      gtag('config', 'G-3K5B8H0KHJ');
+  </script>
+{% endblock %}

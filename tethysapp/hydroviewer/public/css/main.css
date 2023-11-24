@@ -1,0 +1,140 @@
+/* MAP STYLES */
+#app-content-wrapper #app-content {
+    height: 100%;
+}
+
+#inner-app-content {
+    padding: 0;
+    height: 100%;
+}
+
+#chart_modal .modal-dialog {
+    width: 80%
+}
+
+#app-navigation li {
+    list-style-type: none;
+}
+
+#inner-app-content .intro_message {
+    margin-bottom: 0;
+}
+
+.map {
+    height: 100%;
+    cursor: pointer;
+}
+
+.map:-moz-full-screen {
+    width: 100%;
+}
+
+.map:-webkit-full-screen {
+    width: 100%;
+}
+
+.map:-ms-fullscreen {
+    width: 100%;
+}
+
+.map:fullscreen {
+    width: 100%;
+}
+
+.long-term-select {
+    width: 100%;
+}
+
+.select-label {
+    padding-left: 10px;
+}
+
+@-moz-document url-prefix() {
+    fieldset {
+        display: table-cell;
+    }
+}
+
+.collapse-control a:after {
+    font-family: 'Glyphicons Halflings';
+    content: "\e114";
+    float: right;
+    color: #34495E;
+}
+
+.warning-val {
+    font: 400 12px Arial;
+    color: #888;
+    margin: 15px 0;
+}
+
+.load-status {
+    text-align: center;
+    font-weight: bold;
+}
+
+.legend {
+    bottom: 30px;
+    right: 0;
+    /*width: 170px;*/
+    max-height: 90%;
+    overflow-y: auto;
+    margin: 5px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px #ddd solid;
+}
+
+.legend:hover {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+#forecast-chart, #historic-chart, #daily-chart {
+    width: 100%;
+    height: 100%;
+}
+
+th {
+    background-color: lightgrey;
+    font-weight: bold;
+}
+
+th, tr, td {
+    text-align: center;
+    padding: 10px;
+}
+
+.slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 25px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  background: #4CAF50;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  background: #4CAF50;
+  cursor: pointer;
+}
+
+.mybtn {
+    color: black;
+    border-color: black;
+    margin: 10px;
+}
+.animatebtn {
+    color: black;
+}

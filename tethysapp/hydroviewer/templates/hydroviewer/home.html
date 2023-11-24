@@ -1,0 +1,158 @@
+{% extends "hydroviewer/base.html" %}
+
+{% block title %}GEOGloWS Hydroviewer{% endblock %}
+
+{% load static %}
+{% load tethys_gizmos %}
+{% block import_gizmos %}
+  {% import_gizmo_dependency date_picker %}
+{% endblock %}
+
+{# The name you provided in your app.py is accessible through the tethys_app.name context variable #}
+{% block app_title %}{{ tethys_app.name }}{% endblock %}
+
+{% block app_content %}
+  <div id="map" class="map"></div>
+{% endblock %}
+
+{% block after_app_content %}
+  {# Chart Modals #}
+  <div class="modal fade" id="chart_modal" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="row">
+            <h2 style="text-align: center">Streamflow Results <span id="request-status" class="load-status"/></h2>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Nav tabs -->
+          <ul class="nav nav-tabs">
+            <li class="active"><a id="forecast_tab_link" href="#forecast" class="nav-link active"
+                                  data-bs-toggle="tab">Forecasts</a></li>
+            <li class="nav-item"><a id="historical_tab_link" href="#historical" class="nav-link" data-bs-toggle="tab">Retrospective</a>
+            </li>
+          </ul>
+
+          <!-- Tab panes -->
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="forecast">
+              <div class="panel panel-default">
+                <div id="forecast-date-selector">
+                  <label for="forecast_date">Forecast Date: </label>
+                  <input class="form-control" id="forecast_date" name="forecast_date" type="text">
+                </div>
+                <div id="forecast-chart"></div>
+                <div id="forecast-table"></div>
+              </div>
+            </div> <!-- /.tab-pane -->
+            <div role="tabpanel" class="tab-pane" id="historical">
+              <div class="panel panel-default">
+                <div id="historical-chart" class="panel-body"></div>
+              </div>
+            </div><!-- /.tab-pane -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a class="btn btn-success" role="button" id="download-forecast-btn" target="_blank">Download Forecast</a>
+          <a class="btn btn-success" role="button" id="download-historical-btn" target="_blank" style="display: none">Download Historical Data</a>
+          <button type="button" class="btn btn-info" id="resize_charts" onclick="app.fixChartSizes('forecasts')">Resize Chart</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="about_modal" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="row">
+            <h1 style="text-align: center">About Map Data</h1>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <h2 style="text-align: center">GEOGloWS ECMWF Streamflow Model Streams</h2>
+          <p>
+            The stream network visualization is made possible by a collaboration between ESRI, ECMWF, and BYU. The
+            color and width of the lines which represent the stream segments are determined by the average of the
+            ensemble streamflow prediction run by the hydrologic model. Wider lines means more flow and the coloring
+            represents if the stream is experiencing a return period level event: blue = normal, yellow = exceeds 2
+            year return period, red = exceeds 10 year return period, and purple = exceeds 20 year return period.
+          </p>
+          <h2 style="text-align: center">Gauge Networks</h2>
+          <p>
+            Like all models, the GEOGloWS ECMWF model needs to be calibrated. Calibration becomes increasingly
+            difficult as a model increases in geographic extents, complexity, temporal range of simulation, and the
+            frequency the model is executed. The difficulty increases because both the computation time and amount of
+            required input and validation data increases. In the case of hydrologic models, sufficient streamflow
+            observations often do not exist, are not shareable, or are too inaccurate or incomplete to be used.
+            Researchers at BYU led by Jorge Luis Sanchez Lozano, Riley Hales, and Jim Nelson, are developing alternate
+            methods to calibrate models on the fly using what observed data exist and various techniques rooted in
+            spatial analysis, statistical reasoning, and machine learning. These gauge networks represent countries
+            where observed discharge is available as a service and this research team has been performing case studies.
+            Click on one of the reds dots (representing a gauged stream location) to retrieve the streamflow model
+            results for that location after applying a calibration algorithm using the observed data.
+          </p>
+          <h2 style="text-align: center">VIIRS 5-Day Composite Imagery</h2>
+          <p>VIIRS imagery is a web mapping service layer derived from optical observations from satellites.</p>
+          <a href="https://www.star.nesdis.noaa.gov/jpss/images/Harvey/show/VIIRSFloodDetectionMapQuickGuide.pdf"
+             target="_blank">VIIRS Flood Detection Map Quick Guide (PDF) (noaa.gov)</a><br>
+          <a href="https://www.ssec.wisc.edu/flood-map-demo/"
+             target="_blank">VIIRS Quick Start Guide/Flood Map Demo (wisc.edu)</a><br>
+          <img src="{% static 'hydroviewer/images/VIIRS_legend.png' %}" alt="legend"
+               style="width: 80%; margin: auto">
+          <ul>
+            <li>MS: missing data (transparent)</li>
+            <li>LD: clear-sky land (brown)</li>
+            <li>SI: supra-snow/ice water or mixed ice & water (purple)</li>
+            <li>SN: snow cover(white)</li>
+            <li>IC: river/lake ice cover (cyan)</li>
+            <li>CL: cloud cover (grey)</li>
+            <li>CS: cloud shadow and terrain shadow (dark grey)</li>
+            <li>WA: open water (blue)</li>
+            <li>0-100: floodwater fractions (light cyan to red)</li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block styles %}
+  {{ block.super }}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <link rel="stylesheet" href="{% static 'hydroviewer/css/main.css' %}">
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script>
+      // URLS
+      const endpoint = "{{ endpoint }}";
+      const URL_getForecastData = "{% url 'hydroviewer:get-forecast' %}";
+      const URL_getHistoricalData = "{% url 'hydroviewer:get-retrospective' %}";
+      const URL_findReachID = "{% url 'hydroviewer:find-river' %}";
+  </script>
+  {# Leaflet #}
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script
+    src="https://unpkg.com/esri-leaflet@3.0.11/dist/esri-leaflet.js"
+    integrity="sha512-qSE34Lz9JHdaPt3AZsi6L3dcqYHO9nnQEIxfrkgrRqqe+R0DPuAMu+j2vlb92zPka9O+XHZV4+9G5/rHT5ADsQ=="
+    crossorigin=""></script>
+  <script
+    src="https://unpkg.com/esri-leaflet-vector@4.2.2/dist/esri-leaflet-vector.js"
+    integrity="sha512-EBPUr/aLfZBYAFeLJ2WDvTYjjFKAOa6nlySW/EBEalUk+vCWJca51+QW8sa+R/Bg+Umzs7OkL6LyR/OlcjaXiA=="
+    crossorigin=""></script>
+  {# Plotly #}
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="{% static 'hydroviewer/js/geoglows_hydroviewer_core.js' %}"></script>
+{% endblock %}
