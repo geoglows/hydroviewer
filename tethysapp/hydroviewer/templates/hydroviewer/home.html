@@ -32,8 +32,7 @@
           <!-- Nav tabs -->
           <ul class="nav nav-tabs">
             <li class="active"><a id="forecast_tab_link" href="#forecast" class="nav-link active" data-bs-toggle="tab">Forecasts</a></li>
-            <li class="nav-item"><a id="historical_tab_link" href="#historical" class="nav-link" data-bs-toggle="tab">Retrospective</a>
-            </li>
+            <li class="nav-item"><a id="historical_tab_link" href="#historical" class="nav-link" data-bs-toggle="tab">Retrospective</a></li>
           </ul>
 
           <!-- Tab panes -->
@@ -42,7 +41,11 @@
               <div class="panel panel-default">
                 <div id="forecast-date-selector">
                   <label for="forecast_date">Forecast Date: </label>
-                  <input class="form-control" id="forecast_date" name="forecast_date" type="text">
+                  <select class="form-control" id="forecast_date" name="forecast_date">
+                    {% for ymd, display in dates %}
+                      <option value="{{ ymd }}">{{ display }}</option>
+                    {% endfor %}
+                  </select>
                 </div>
                 <div id="forecastPlot"></div>
                 <div id="fcEnsPlot"></div>
@@ -62,7 +65,7 @@
         <div class="modal-footer">
           <a class="btn btn-success" role="button" id="download-forecast-btn" target="_blank">Download Forecast</a>
           <a class="btn btn-success" role="button" id="download-historical-btn" target="_blank" style="display: none">Download Historical Data</a>
-          <button type="button" class="btn btn-info" id="resize_charts" onclick="app.fixChartSizes('forecasts')">Resize Chart</button>
+{#          <button type="button" class="btn btn-info" id="resize_charts" onclick="app.fixChartSizes('forecasts')">Resize Chart</button>#}
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
@@ -131,23 +134,29 @@
 
 {% block styles %}
   {{ block.super }}
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  <link rel="stylesheet" href="{% static 'hydroviewer/css/main.css' %}">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <link
+    rel="stylesheet"
+    href="{% static 'hydroviewer/css/main.css' %}"/>
 {% endblock %}
 
 {% block scripts %}
   {{ block.super }}
   <script>
-      // URLS
-      const endpoint = "{{ endpoint }}";
-      const URL_getForecastData = "{% url 'hydroviewer:get-forecast' %}";
-      const URL_getHistoricalData = "{% url 'hydroviewer:get-retrospective' %}";
-      const URL_findReachID = "{% url 'hydroviewer:find-river' %}";
+    // URLS
+    const endpoint = "{{ endpoint }}";
+    const URL_getForecastData = "{% url 'hydroviewer:get-forecast' %}";
+    const URL_getHistoricalData = "{% url 'hydroviewer:get-retrospective' %}";
+    const URL_findReachID = "{% url 'hydroviewer:find-river' %}";
   </script>
   {# Leaflet #}
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
   <script
     src="https://unpkg.com/esri-leaflet@3.0.11/dist/esri-leaflet.js"
     integrity="sha512-qSE34Lz9JHdaPt3AZsi6L3dcqYHO9nnQEIxfrkgrRqqe+R0DPuAMu+j2vlb92zPka9O+XHZV4+9G5/rHT5ADsQ=="

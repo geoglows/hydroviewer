@@ -1,42 +1,49 @@
-import geoglows
-import matplotlib
-import pandas as pd
+import geoglows as gg
 from django.http import JsonResponse
 from django.shortcuts import render
 from tethys_sdk.routing import controller
 
-# necessary for matplotlib to work in django processes
-matplotlib.use('Agg')
-
 
 @controller
 def home(request):
-    return render(request, 'hydroviewer/home.html', {})
+    """
+    Controller for the app home page.
+    """
+    dates = gg.data.dates().values.flatten().tolist()
+    dates = [str(date) for date in dates]
+    dates = [(date, f'{date[0:4]}-{date[4:6]}-{date[6:8]}') for date in dates]
+    return render(request, 'hydroviewer/home.html', {'dates': dates})
 
 
 @controller(name='get-forecast', url='get-forecast')
 def get_forecast(request):
     reach_id = request.GET['reach_id']
+    forecast_date = request.GET.get('forecast_date')
     source = 'hydroviewer'
-    df = geoglows.data.forecast(reach_id, source=source)
-    # todo send json df and do all plots and downloads in js
-    return JsonResponse({'plotForecast': geoglows.plots.forecast(df, plot_type='plotly_html')})
+    # ens = gg.data.forecast_ensembles(reach_id, source=source)
+    # simple = gg.analyze.simple_forecast(ens)
+    simple = gg.data.forecast(reach_id, date=forecast_date, source=source)
+    simple = simple.rename(columns={'flow_med_cms': 'flow_median_cms'})
+    return JsonResponse({
+        # 'ens': gg.plots.forecast_ensembles(ens, plot_type='html'),
+        'simple': gg.plots.forecast(simple, plot_type='html'),
+    })
 
 
 @controller(name='get-retrospective', url='get-retrospective')
 def get_retrospective(request):
     reach_id = int(request.GET['reach_id'])
 
-    df = geoglows.data.retrospective(reach_id)
-    dayavg_df = geoglows.analyze.daily_averages(df)
-    monavg_df = geoglows.analyze.monthly_averages(df)
-    annavg_df = geoglows.analyze.annual_averages(df)
+    df = gg.data.retrospective(reach_id=reach_id)
+    dayavg_df = gg.analyze.daily_averages(df)
+    monavg_df = gg.analyze.monthly_averages(df)
+    annavg_df = gg.analyze.annual_averages(df)
 
     json_response = {
-        'retro': geoglows.plots.retrospective(df, plot_type='html'),
-        'dayAvg': geoglows.plots.daily_averages(dayavg_df, plot_type='html'),
-        'monAvg': geoglows.plots.monthly_averages(monavg_df, plot_type='html'),
-        'annAvg': geoglows.plots.annual_averages(annavg_df, plot_type='html'),
+        'retro': gg.plots.retrospective(df, plot_type='html'),
+        'dayAvg': gg.plots.daily_averages(dayavg_df, plot_type='html'),
+        'monAvg': gg.plots.monthly_averages(monavg_df, plot_type='html'),
+        'annAvg': gg.plots.annual_averages(annavg_df, plot_type='html'),
     }
 
     return JsonResponse(json_response)
@@ -44,5 +51,5 @@ def get_retrospective(request):
 
 @controller(name='find-river', url='find-river')
 def find_river(request):
-    lat, lon = geoglows.streams.reach_to_latlon(int(request.GET['reach_id']))
+    lat, lon = gg.streams.reach_to_latlon(int(request.GET['reach_id']))
     return JsonResponse({'lat': lat, 'lon': lon})

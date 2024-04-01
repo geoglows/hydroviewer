@@ -10,12 +10,10 @@ requirements:
   skip: false
   conda:
     channels:
-        - conda-forge
-        - defaults
+      - conda-forge
+      - defaults
     packages:
-#      - geoglows>=1
-#      - pandas>=1
-#      - numpy>=1
+      - geoglows>=1
 
   pip:
 

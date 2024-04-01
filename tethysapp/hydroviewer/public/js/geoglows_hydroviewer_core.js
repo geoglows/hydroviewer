@@ -60,7 +60,7 @@ const app = (() => {
         const polyLineSVG = (color, label) => `<div><svg width="20" height="20" viewPort="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polyline points="19 1, 1 6, 19 14, 1 19" stroke="${color}" fill="transparent" stroke-width="2"/></svg>${label}</div>`
         div.innerHTML =
             '<div class="legend">' +
-            legendEntries.map(entry => polyLineSVG(...entry)).join("").join("") +
+            legendEntries.map(entry => polyLineSVG(...entry)).join("") +
             "</div>"
         return div
     }
@@ -144,8 +144,8 @@ const app = (() => {
         .addTo(mapObj)
 
     mapObj.on("click", event => {
-        if (mapObj.getZoom() <= 9.5) return mapObj.flyTo(event.latlng, 10)
-        mapObj.flyTo(event.latlng)
+        // if (mapObj.getZoom() <= 9.5) return mapObj.flyTo(event.latlng, 10)
+        // mapObj.flyTo(event.latlng)
 
         if (mapMarker) {
             mapObj.removeLayer(mapMarker)
@@ -154,26 +154,34 @@ const app = (() => {
         updateStatusIcons({reachid: "load", forecast: "clear", retro: "clear"})
         $("#chart_modal").modal("show")
 
-        L.esri
-            .identifyFeatures({url: "https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer"})
-            .on(mapObj)
-            .at([event.latlng["lat"], event.latlng["lng"]])
-            .tolerance(10) // map pixels to buffer search point
-            .precision(3) // decimals in the returned coordinate pairs
-            .run((error, featureCollection) => {
-                if (error) {
-                    updateStatusIcons({reachid: "fail"})
-                    alert("Error finding the reach_id")
-                    return
-                }
-                updateStatusIcons({reachid: "ready"})
-                selectedSegment.clearLayers()
-                selectedSegment.addData(featureCollection.features[0].geometry)
-                REACHID = featureCollection.features[0].properties["COMID (Stream Identifier)"]
-                clearChartDivs()
-                getForecastData()
-                getHistoricalData()
-            })
+        updateStatusIcons({reachid: "ready"})
+        // selectedSegment.clearLayers()
+        // selectedSegment.addData(featureCollection.features[0].geometry)
+        // REACHID = featureCollection.features[0].properties["COMID (Stream Identifier)"]
+        REACHID = 710431167
+        clearChartDivs()
+        getHistoricalData()
+        getForecastData()
+        // L.esri
+        //     .identifyFeatures({url: "https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer"})
+        //     .on(mapObj)
+        //     .at([event.latlng["lat"], event.latlng["lng"]])
+        //     .tolerance(10) // map pixels to buffer search point
+        //     .precision(3) // decimals in the returned coordinate pairs
+        //     .run((error, featureCollection) => {
+        //         if (error) {
+        //             updateStatusIcons({reachid: "fail"})
+        //             alert("Error finding the reach_id")
+        //             return
+        //         }
+        //         updateStatusIcons({reachid: "ready"})
+        //         selectedSegment.clearLayers()
+        //         selectedSegment.addData(featureCollection.features[0].geometry)
+        //         REACHID = featureCollection.features[0].properties["COMID (Stream Identifier)"]
+        //         clearChartDivs()
+        //         getHistoricalData()
+        //         getForecastData()
+        //     })
     })
 
 //////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
@@ -231,20 +239,24 @@ const app = (() => {
     ]
 
     const getForecastData = () => {
+        if (!REACHID) return
         let ftl = $("#forecast_tab_link") // select divs with jquery so we can reuse them
+        let simpleForecast = chartDivs[0]
+        let ensembleForecast = chartDivs[1]
         ftl.tab("show")
-        let fc = chartDivs[0]
-        fc.html(`<img alt="loading signal" src=${loading_gif}>`)
-        fc.css("text-align", "center")
+        simpleForecast.html(`<img alt="loading signal" src=${loading_gif}>`)
+        simpleForecast.css("text-align", "center")
         updateStatusIcons({forecast: "load"})
         $.ajax({
             type: "GET",
             async: true,
-            data: {reach_id: REACHID},
+            data: {reach_id: REACHID, forecast_date: $("#forecast_date").val()},
             url: URL_getForecastData,
             success: response => {
                 ftl.tab("show")
-                fc.html(response["plot"])
+                ftl.click()
+                simpleForecast.html(response["simple"])
+                ensembleForecast.html(response["ens"])
                 $("#forecast-table").html(response["table"])
                 updateStatusIcons({forecast: "ready"})
             },
@@ -256,11 +268,12 @@ const app = (() => {
     }
 
     const getHistoricalData = () => {
+        if (!REACHID) return
         updateStatusIcons({retro: "load"})
         updateDownloadLinks("clear")
         let tl = $("#historical_tab_link") // select divs with jquery so we can reuse them
         tl.tab("show")
-        let plotdiv = chartDivs[2]
+        let plotdiv = chartDivs[3]
         plotdiv.css("text-align", "center")
         $.ajax({
             type: "GET",
@@ -270,6 +283,7 @@ const app = (() => {
             success: response => {
                 updateStatusIcons({retro: "ready"})
                 tl.tab("show")
+                tl.click()
                 plotdiv.html(response.retro)
                 $("#dayAvgPlot").html(response.dayAvg)
                 $("#monAvgPlot").html(response.monAvg)
@@ -327,8 +341,7 @@ const app = (() => {
     }
 
     const fixChartSizes = tab => {
-        //     divs = [$("#forecastPlot .js-plotly-plot")]
-        const divsToFix = tab === "forecast" ? chartDivs.slice(0, 3) : chartDivs.slice(3)
+        const divsToFix = tab === "forecast" ? chartDivs.slice(0, 1) : chartDivs.slice(3)
         divsToFix.forEach(div => {
             // select divs with the .js-plotly-plot class
             try {
@@ -348,6 +361,7 @@ const app = (() => {
 
     $("#forecast_tab_link").on("click", () => fix_buttons("forecast"))
     $("#historical_tab_link").on("click", () => fix_buttons("historical"))
+    $("#forecast_date").on("change", getForecastData)
 
     const clearMarkers = () => {
         if (mapMarker) mapObj.removeLayer(mapMarker)
