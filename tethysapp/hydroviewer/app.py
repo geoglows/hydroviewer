@@ -6,8 +6,8 @@ class Hydroviewer(TethysAppBase):
     Tethys app class for GEOGloWS V2 Hydroviewer.
     """
 
-    name = 'GEOGloWS V2 Hydroviewer'
-    description = 'Graphical interface for the GEOGloWS Hydrologic Model Version 2'
+    name = 'GEOGLOWS V2 Hydroviewer'
+    description = 'Graphical interface for the GEOGLOWS Hydrologic Model Version 2'
     package = 'hydroviewer'  # WARNING: Do not change this value
     index = 'home'
     icon = f'{package}/images/icon.gif'
