@@ -1,7 +1,5 @@
 {% extends "hydroviewer/base.html" %}
 
-{% block title %}GEOGloWS Hydroviewer{% endblock %}
-
 {% load static %}
 {% load tethys_gizmos %}
 {% block import_gizmos %}
@@ -86,22 +84,20 @@
 
         <div class="modal-body">
           <h2 style="text-align: center">GEOGLOWS ECMWF Streamflow Model Streams</h2>
-          <p>
+          <div>
             GEOGLOWS is the Group on Earth Observations' Global Water Sustainability program. This tool is the viewer
             for the GEOGLOWS programs global hydrologic model, now on version 2. Please refer to the
             <a href="https://data.geoglows.org" target="_blank">data documentation site</a> and the
             <a href="https://geoglows.org" target="_blank">GEOGLOWS program home page</a> for more information.
             The model provides a few main outputs:
-          <ul>
-            <li>Daily 15 day ensemble forecasts at 3 hour time steps</li>
-            <li>Retrospective simulation of daily average flows covering 1 January 2024 to the present with 5-12 days of
-              lag
-            </li>
-            <li>GIS datasets for the streams and catchments</li>
-            <li>Model configuration files</li>
-            <li>River context information such as river names and country</li>
-          </ul>
-          </p>
+            <ul>
+              <li>Daily 15 day ensemble forecasts at 3 hour time steps</li>
+              <li>Retrospective simulation of daily average flows covering 1 January 2024 to the present with 5-12 days of lag</li>
+              <li>GIS datasets for the streams and catchments</li>
+              <li>Model configuration files</li>
+              <li>River context information such as river names and country</li>
+            </ul>
+          </div>
           <h2 style="text-align: center">VIIRS 5-Day Composite Imagery</h2>
           <p>VIIRS imagery is a web mapping service layer derived from the VIIRS satellites' optical sensors.</p>
           <a href="https://www.star.nesdis.noaa.gov/jpss/images/Harvey/show/VIIRSFloodDetectionMapQuickGuide.pdf" target="_blank">VIIRS Flood Detection Map Quick Guide (PDF) (noaa.gov)</a><br>

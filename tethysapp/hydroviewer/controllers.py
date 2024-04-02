@@ -17,8 +17,12 @@ def home(request):
 
 @controller(name='get-forecast', url='get-forecast')
 def get_forecast(request):
-    reach_id = request.GET['reach_id']
-    forecast_date = request.GET.get('forecast_date')
+    reach_id = request.GET.get('reach_id', None)
+    forecast_date = request.GET.get('forecast_date', None)
+
+    if not reach_id or not forecast_date:
+        return JsonResponse({'error': 'Missing required parameters'})
+
     source = 'hydroviewer'
     # ens = gg.data.forecast_ensembles(reach_id, source=source)
     # simple = gg.analyze.simple_forecast(ens)
