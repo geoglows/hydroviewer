@@ -92,7 +92,9 @@
             The model provides a few main outputs:
             <ul>
               <li>Daily 15 day ensemble forecasts at 3 hour time steps</li>
-              <li>Retrospective simulation of daily average flows covering 1 January 2024 to the present with 5-12 days of lag</li>
+              <li>Retrospective simulation of daily average flows covering 1 January 2024 to the present with 5-12 days
+                of lag
+              </li>
               <li>GIS datasets for the streams and catchments</li>
               <li>Model configuration files</li>
               <li>River context information such as river names and country</li>
@@ -100,8 +102,10 @@
           </div>
           <h2 style="text-align: center">VIIRS 5-Day Composite Imagery</h2>
           <p>VIIRS imagery is a web mapping service layer derived from the VIIRS satellites' optical sensors.</p>
-          <a href="https://www.star.nesdis.noaa.gov/jpss/images/Harvey/show/VIIRSFloodDetectionMapQuickGuide.pdf" target="_blank">VIIRS Flood Detection Map Quick Guide (PDF) (noaa.gov)</a><br>
-          <a href="https://www.ssec.wisc.edu/flood-map-demo/" target="_blank">VIIRS Quick Start Guide/Flood Map Demo (wisc.edu)</a><br>
+          <a href="https://www.star.nesdis.noaa.gov/jpss/images/Harvey/show/VIIRSFloodDetectionMapQuickGuide.pdf" target="_blank">VIIRS
+            Flood Detection Map Quick Guide (PDF) (noaa.gov)</a><br>
+          <a href="https://www.ssec.wisc.edu/flood-map-demo/" target="_blank">VIIRS Quick Start Guide/Flood Map Demo
+            (wisc.edu)</a><br>
           <img src="{% static 'hydroviewer/images/VIIRS_legend.png' %}" alt="legend" style="width: 80%; margin: auto">
           <ul>
             <li>MS: missing data (transparent)</li>
@@ -128,10 +132,12 @@
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""/>
   <link
     rel="stylesheet"
-    href="{% static 'hydroviewer/css/main.css' %}"/>
+    href="{% static 'hydroviewer/css/main.css' %}"
+    crossorigin=""/>
 {% endblock %}
 
 {% block scripts %}
@@ -139,9 +145,13 @@
   <script>
     // URLS
     const endpoint = "{{ endpoint }}";
+
     const URL_getForecastData = "{% url 'hydroviewer:get-forecast' %}";
     const URL_getHistoricalData = "{% url 'hydroviewer:get-retrospective' %}";
     const URL_findReachID = "{% url 'hydroviewer:find-river' %}";
+
+    const ESRI_LAYER_URL = "https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer";
+    const VIIRS_LAYER_URL = "https://floods.ssec.wisc.edu/tiles/RIVER-FLDglobal-composite/{z}/{x}/{y}.png";
   </script>
   {# Leaflet #}
   <script
@@ -158,5 +168,5 @@
     crossorigin=""></script>
   {# Plotly #}
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <script src="{% static 'hydroviewer/js/geoglows_hydroviewer_core.js' %}"></script>
+  <script src="{% static 'hydroviewer/js/main.js' %}"></script>
 {% endblock %}

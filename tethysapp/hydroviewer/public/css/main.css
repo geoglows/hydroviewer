@@ -178,3 +178,10 @@ th, tr, td {
 .animatebtn {
     color: black;
 }
+
+#mouse-position {
+    margin: 10px;
+    background-color: white;
+    padding: 10px 15px;
+    font-weight: bold;
+}

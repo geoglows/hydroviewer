@@ -24,12 +24,15 @@ def get_forecast(request):
         return JsonResponse({'error': 'Missing required parameters'})
 
     source = 'hydroviewer'
-    # ens = gg.data.forecast_ensembles(reach_id, source=source)
-    # simple = gg.analyze.simple_forecast(ens)
-    simple = gg.data.forecast(reach_id, date=forecast_date, source=source)
-    simple = simple.rename(columns={'flow_med_cms': 'flow_median_cms'})
+    try:
+        ens = gg.data.forecast_ensembles(reach_id, source=source)
+        simple = gg.analyze.simple_forecast(ens)
+        simple = simple.rename(columns={'flow_med_cms': 'flow_median_cms'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)})
+
     return JsonResponse({
-        # 'ens': gg.plots.forecast_ensembles(ens, plot_type='html'),
+        'ens': gg.plots.forecast_ensembles(ens, plot_type='html'),
         'simple': gg.plots.forecast(simple, plot_type='html'),
     })
 
