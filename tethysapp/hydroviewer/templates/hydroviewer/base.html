@@ -29,6 +29,12 @@
   <a class="btn btn-light mybtn" role="button" onclick="app.findLatLon()">Zoom to Lat/Lon</a>
   <a class="btn btn-light mybtn" role="button" onclick="app.clearMarkers()">Remove Map Marker</a>
   <hr>
+  {# put a slider stype checkbox with a label inline with eachother #}
+  <div style="display: flex; justify-content: space-between; align-items: center">
+    <label class="control-label" for="slider">Auto Load Retrospective</label>
+    <input type="checkbox" id="auto-load-retrospective" style="height: 1rem; width: 1rem" checked>
+  </div>
+  <hr>
   <a role="button" class="btn btn-light mybtn" data-bs-toggle="modal" data-bs-target="#about_modal">About Map Data</a>
 {% endblock %}
 
@@ -45,6 +51,6 @@
 {% block scripts %}
   {{ block.super }}
   <script>
-      const loading_gif = "{% static 'hydroviewer/images/progress_bar.gif' %}"
+    const loading_gif = "{% static 'hydroviewer/images/progress_bar.gif' %}"
   </script>
 {% endblock %}

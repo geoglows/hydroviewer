@@ -21,10 +21,12 @@ def get_forecast(request):
     forecast_date = request.GET.get('forecast_date', None)
 
     if not reach_id or not forecast_date:
-        return JsonResponse({'error': 'Missing required parameters'})
+        return JsonResponse({'error': 'Missing requ ired parameters'})
 
     source = 'hydroviewer'
+    reach_id = int(reach_id)
     try:
+        rp = gg.data.return_periods(reach_id)
         ens = gg.data.forecast_ensembles(reach_id, source=source)
         simple = gg.analyze.simple_forecast(ens)
         simple = simple.rename(columns={'flow_med_cms': 'flow_median_cms'})
@@ -32,8 +34,9 @@ def get_forecast(request):
         return JsonResponse({'error': str(e)})
 
     return JsonResponse({
-        'ens': gg.plots.forecast_ensembles(ens, plot_type='html'),
-        'simple': gg.plots.forecast(simple, plot_type='html'),
+        'ens': gg.plots.forecast_ensembles(ens, rp_df=rp, plot_type='html'),
+        'simple': gg.plots.forecast(simple, rp_df=rp, plot_type='html'),
+        'rpt': gg.tables.flood_probabilities(ens, rp),
     })
 
 

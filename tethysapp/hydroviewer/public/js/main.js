@@ -169,7 +169,7 @@ const app = (() => {
     REACHID = 710431167
     clearChartDivs()
     getForecastData()
-    getHistoricalData()
+    getRetrospectiveData()
     // })
   })
 
@@ -231,6 +231,7 @@ const app = (() => {
     let ftl = $("#forecast_tab_link") // select divs with jquery so we can reuse them
     let simpleForecast = chartDivs[0]
     let ensembleForecast = chartDivs[1]
+    let probabilityTable = chartDivs[2]
     ftl.tab("show")
     simpleForecast.html(`<img alt="loading signal" src=${loading_gif}>`)
     simpleForecast.css("text-align", "center")
@@ -253,7 +254,7 @@ const app = (() => {
         }
         simpleForecast.html(response["simple"])
         ensembleForecast.html(response["ens"])
-        $("#forecast-table").html(response["table"])
+        probabilityTable.html(response["rpt"])
         updateStatusIcons({forecast: "ready"})
       },
       error: () => {
@@ -264,14 +265,16 @@ const app = (() => {
     })
   }
 
-  const getHistoricalData = () => {
+  const getRetrospectiveData = () => {
     if (!REACHID) return
+    if (!document.getElementById("auto-load-retrospective").checked) {
+      giveRetrospectiveRetryButton(REACHID)
+      return
+    }
     updateStatusIcons({retro: "load"})
     updateDownloadLinks("clear")
     let tl = $("#historical_tab_link") // select divs with jquery so we can reuse them
-    tl.tab("show")
     let plotdiv = chartDivs[3]
-    plotdiv.css("text-align", "center")
     $.ajax({
       type: "GET",
       async: true,
@@ -341,31 +344,38 @@ const app = (() => {
   }
 
   const fixChartSizes = tab => {
-    const divsToFix = tab === "forecast" ? chartDivs.slice(0, 1) : chartDivs.slice(3)
+    const divsToFix = tab === "forecast" ? chartDivs.slice(0, 3) : chartDivs.slice(3)
     divsToFix.forEach(div => {
-      // select divs with the .js-plotly-plot class
       try {
-        div.css("height", "500px")
+        div.css("min-height", "250px")
         Plotly.Plots.resize(div[0])
       } catch (e) {
       }
     })
   }
 
-  const clearChartDivs = () => {
-    chartDivs.forEach(div => {
-      div.css("height", "0px")
+  const clearChartDivs = (chartTypes) => {
+    let divsToClear
+    if (chartTypes === "forecast") {
+      divsToClear = chartDivs.slice(0, 3)
+    } else if (chartTypes === "retrospective") {
+      divsToClear = chartDivs.slice(3)
+    } else {
+      divsToClear = chartDivs
+    }
+    divsToClear.forEach(div => {
+      div.css("min-height", "0")
       div.html("")
     })
   }
 
   const giveForecastRetryButton = reachid => {
-    // todo clear all the other forecast plots
+    clearChartDivs({chartTypes: "forecast"})
     $("#forecastPlot").html(`<button class="btn btn-warning" onclick="app.getForecastData(${reachid})">Retry Retrieve Forecast</button>`)
   }
   const giveRetrospectiveRetryButton = reachid => {
-    // todo clear all the other retrospective plots
-    $("#retroPlot").html(`<button class="btn btn-warning" onclick="app.getHistoricalData(${reachid})">Retry Retrieve Retrospective</button>`)
+    clearChartDivs({chartTypes: "historical"})
+    $("#retroPlot").html(`<button class="btn btn-warning" onclick="app.getRetrospectiveData(${reachid})">Retrieve Retrospective Data</button>`)
   }
 
   $("#forecast_tab_link").on("click", () => fix_buttons("forecast"))
@@ -381,6 +391,6 @@ const app = (() => {
     findReachID,
     clearMarkers,
     getForecastData,
-    getHistoricalData
+    getRetrospectiveData
   }
 })()

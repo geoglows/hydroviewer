@@ -47,17 +47,17 @@
                     {% endfor %}
                   </select>
                 </div>
-                <div id="forecastPlot"></div>
-                <div id="fcEnsPlot"></div>
-                <div id="fcProbTable"></div>
+                <div id="forecastPlot" style="height: auto"></div>
+                <div id="fcEnsPlot" style="height: auto"></div>
+                <div id="fcProbTable" style="height: auto"></div>
               </div>
             </div> <!-- /.tab-pane -->
             <div role="tabpanel" class="tab-pane" id="historical">
               <div class="panel panel-default">
-                <div id="retroPlot" class="panel-body modal-chart"></div>
-                <div id="dayAvgPlot" class="panel-body modal-chart"></div>
-                <div id="monAvgPlot" class="panel-body modal-chart"></div>
-                <div id="annAvgPlot" class="panel-body modal-chart"></div>
+                <div id="retroPlot" class="panel-body modal-chart" style="height: auto"></div>
+                <div id="dayAvgPlot" class="panel-body modal-chart" style="height: auto"></div>
+                <div id="monAvgPlot" class="panel-body modal-chart" style="height: auto"></div>
+                <div id="annAvgPlot" class="panel-body modal-chart" style="height: auto"></div>
               </div>
             </div><!-- /.tab-pane -->
           </div>
@@ -66,7 +66,6 @@
           <a class="btn btn-success" role="button" id="download-forecast-btn" target="_blank">Download Forecast</a>
           <a class="btn btn-success" role="button" id="download-historical-btn" target="_blank" style="display: none">Download
             Historical Data</a>
-          {#          <button type="button" class="btn btn-info" id="resize_charts" onclick="app.fixChartSizes('forecasts')">Resize Chart</button>#}
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
@@ -83,7 +82,7 @@
         </div>
 
         <div class="modal-body">
-          <h2 style="text-align: center">GEOGLOWS ECMWF Streamflow Model Streams</h2>
+          <h2 style="text-align: center">GEOGLOWS Streamflow</h2>
           <div>
             GEOGLOWS is the Group on Earth Observations' Global Water Sustainability program. This tool is the viewer
             for the GEOGLOWS programs global hydrologic model, now on version 2. Please refer to the

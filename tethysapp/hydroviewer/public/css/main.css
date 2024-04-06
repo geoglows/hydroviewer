@@ -40,6 +40,7 @@
     padding: 0;
     flex-grow: 0;
 }
+
 .row {
     width: 100%;
 }
@@ -127,21 +128,6 @@
     background: rgba(255, 255, 255, 0.9);
 }
 
-#forecast-chart, #historic-chart, #daily-chart {
-    width: 100%;
-    height: 100%;
-}
-
-th {
-    background-color: lightgrey;
-    font-weight: bold;
-}
-
-th, tr, td {
-    text-align: center;
-    padding: 10px;
-}
-
 .slider {
     -webkit-appearance: none;
     width: 100%;
@@ -184,4 +170,27 @@ th, tr, td {
     background-color: white;
     padding: 10px 15px;
     font-weight: bold;
+}
+
+#fcProbTable {
+    height: auto;
+    min-height: 250px;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
+#fcProbTable > table {
+    width: 80%;
+    min-width: 750px;
+    border-collapse: collapse;
+}
+
+th {
+    background-color: lightgrey;
+    font-weight: bold;
+}
+
+th, tr, td {
+    text-align: center;
+    padding: 10px;
 }
