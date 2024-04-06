@@ -12,7 +12,12 @@ def home(request):
     dates = gg.data.dates().values.flatten().tolist()
     dates = [str(date) for date in dates]
     dates = [(date, f'{date[0:4]}-{date[4:6]}-{date[6:8]}') for date in dates]
-    return render(request, 'hydroviewer/home.html', {'dates': dates})
+    context = {
+        'dates': dates,
+        'endpoint': gg.data.DEFAULT_REST_ENDPOINT,
+        'version': gg.data.DEFAULT_REST_ENDPOINT_VERSION,
+    }
+    return render(request, 'hydroviewer/home.html', context)
 
 
 @controller(name='get-forecast', url='get-forecast')

@@ -143,12 +143,13 @@
   {{ block.super }}
   <script>
     // URLS
-    const endpoint = "{{ endpoint }}";
-
     const URL_getForecastData = "{% url 'hydroviewer:get-forecast' %}";
     const URL_getHistoricalData = "{% url 'hydroviewer:get-retrospective' %}";
     const URL_findReachID = "{% url 'hydroviewer:find-river' %}";
 
+    // CONSTANTS
+    const REST_ENDPOINT = "{{ endpoint }}";
+    const REST_VERSION = "{{ version }}";
     const ESRI_LAYER_URL = "https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer";
     const VIIRS_LAYER_URL = "https://floods.ssec.wisc.edu/tiles/RIVER-FLDglobal-composite/{z}/{x}/{y}.png";
   </script>

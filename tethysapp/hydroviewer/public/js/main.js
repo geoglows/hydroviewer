@@ -169,7 +169,7 @@ const app = (() => {
     REACHID = 710431167
     clearChartDivs()
     getForecastData()
-    getRetrospectiveData()
+    document.getElementById('auto-load-retrospective').checked ? getRetrospectiveData() : giveRetrospectiveRetryButton(REACHID)
     // })
   })
 
@@ -209,8 +209,8 @@ const app = (() => {
       $("#download-forecast-btn").attr("href", "")
       $("#download-historical-btn").attr("href", "")
     } else if (type === "set") {
-      $("#download-forecast-btn").attr("href", endpoint + "ForecastStats/?reach_id=" + REACHID)
-      $("#download-historical-btn").attr("href", endpoint + "HistoricSimulation/?reach_id=" + REACHID)
+      $("#download-forecast-btn").attr("href", `${REST_ENDPOINT}${REST_VERSION}/forecast/${REACHID}`)
+      $("#download-historical-btn").attr("href", `${REST_ENDPOINT}${REST_VERSION}/retrospective/${REACHID}`)
     }
   }
 
@@ -255,6 +255,7 @@ const app = (() => {
         simpleForecast.html(response["simple"])
         ensembleForecast.html(response["ens"])
         probabilityTable.html(response["rpt"])
+        updateDownloadLinks("set")
         updateStatusIcons({forecast: "ready"})
       },
       error: () => {
@@ -267,10 +268,6 @@ const app = (() => {
 
   const getRetrospectiveData = () => {
     if (!REACHID) return
-    if (!document.getElementById("auto-load-retrospective").checked) {
-      giveRetrospectiveRetryButton(REACHID)
-      return
-    }
     updateStatusIcons({retro: "load"})
     updateDownloadLinks("clear")
     let tl = $("#historical_tab_link") // select divs with jquery so we can reuse them
@@ -281,13 +278,14 @@ const app = (() => {
       data: {reach_id: REACHID},
       url: URL_getHistoricalData,
       success: response => {
-        updateStatusIcons({retro: "ready"})
         tl.tab("show")
         tl.click()
         plotdiv.html(response.retro)
         $("#dayAvgPlot").html(response.dayAvg)
         $("#monAvgPlot").html(response.monAvg)
         $("#annAvgPlot").html(response.annAvg)
+        updateDownloadLinks("set")
+        updateStatusIcons({retro: "ready"})
       },
       error: () => {
         updateStatusIcons({retro: "fail"})
