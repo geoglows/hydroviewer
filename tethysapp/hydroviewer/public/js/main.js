@@ -146,8 +146,8 @@ const app = (() => {
 
     if (mapMarker) mapObj.removeLayer(mapMarker)
     mapMarker = L.marker(event.latlng).addTo(mapObj)
-    updateStatusIcons({reachid: "load", forecast: "clear", retro: "clear"})
-    $("#chart_modal").modal("show")
+    // updateStatusIcons({reachid: "load", forecast: "clear", retro: "clear"})
+    // $("#chart_modal").modal("show")
 
     // L.esri
     //   .identifyFeatures({url: ESRI_LAYER_URL})
@@ -165,15 +165,19 @@ const app = (() => {
     //     selectedSegment.clearLayers()
     //     selectedSegment.addData(featureCollection.features[0].geometry)
     //     REACHID = featureCollection.features[0].properties["COMID (Stream Identifier)"]
-    updateStatusIcons({reachid: "ready"})
-    REACHID = 710431167
-    clearChartDivs()
-    getForecastData()
-    document.getElementById('auto-load-retrospective').checked ? getRetrospectiveData() : giveRetrospectiveRetryButton(REACHID)
+    //     fetchData(REACHID)
     // })
   })
 
 //////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
+  const fetchData = reachid => {
+    REACHID = reachid ? reachid : REACHID
+    updateStatusIcons({reachid: "ready", forecast: "clear", retro: "clear"})
+    $("#chart_modal").modal("show")
+    clearChartDivs()
+    getForecastData()
+    document.getElementById('auto-load-retrospective').checked ? getRetrospectiveData() : giveRetrospectiveRetryButton(REACHID)
+  }
   const findReachID = () => {
     $.ajax({
       type: "GET",
@@ -186,6 +190,14 @@ const app = (() => {
       },
       error: () => alert("Unable to find that reach_id. Please check the number and try again.")
     })
+  }
+
+  const setReachID = () => {
+    REACHID = prompt("Please enter a 9 digit River ID to search for.")
+    if (!REACHID) return
+    // check that it is a 9 digit number
+    if (!/^\d{9}$/.test(REACHID)) return alert("River ID numbers should be 9 digit numbers")
+    fetchData(parseInt(REACHID))
   }
 
   const findLatLon = () => {
@@ -389,6 +401,7 @@ const app = (() => {
     findReachID,
     clearMarkers,
     getForecastData,
-    getRetrospectiveData
+    getRetrospectiveData,
+    setReachID,
   }
 })()
