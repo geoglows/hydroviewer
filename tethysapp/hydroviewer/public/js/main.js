@@ -1,3 +1,10 @@
+// XMLHttpRequest.prototype.open = (function(open) {
+//   return function(method,url,async) {
+//     open.apply(this,arguments);
+//     this.setRequestHeader('ngrok-skip-browser-warning', 'true');
+//     };
+// })(XMLHttpRequest.prototype.open);
+
 const app = (() => {
   'use strict'
 
@@ -119,26 +126,82 @@ const app = (() => {
     refreshLayerAnimation()
   })
 ////////////////////////////////////////////////////////////////////////  ADD WMS LAYERS FOR DRAINAGE LINES, VIIRS, ETC - SEE HOME.HTML TEMPLATE
+//   const esriStreamLayer = L
+//     .esri
+//     .dynamicMapLayer({
+//       url: ESRI_LAYER_URL,
+//       useCors: false,
+//       layers: [0],
+//       from: startDateTime,
+//       to: endDateTime
+//     })
+//     .addTo(mapObj)
+//   L.control
+//     .layers(
+//       basemapsJson,
+//       {
+//         "Stream Network": esriStreamLayer,
+//         "VIIRS Imagery": VIIRSlayer
+//       },
+//       {collapsed: false}
+//     )
+//     .addTo(mapObj)
+
+  // add a temporary stream layer to the map
+  // const wmsBaseURL = 'http://localhost:8080/qgis-server'
+  const wmsBaseURL = 'https://287c-2601-681-b80-80d0-84a4-5b6b-b79c-3364.ngrok-free.app/qgis-server'
+  const layerName = 'test_dc1bc283_5137_4832_9e0e_9c8e5780d6b4'
   const esriStreamLayer = L
-    .esri
-    .dynamicMapLayer({
-      url: ESRI_LAYER_URL,
-      useCors: false,
-      layers: [0],
-      from: startDateTime,
-      to: endDateTime
-    })
-    .addTo(mapObj)
-  L.control
-    .layers(
-      basemapsJson,
+    .tileLayer.wms(wmsBaseURL, {
+      layers: layerName,
+      format: 'image/png',
+      transparent: true,
+      styles: 'default'
+    }).addTo(mapObj)
+
+  function getFeatureInfo(latlng) {
+    var point = mapObj.latLngToContainerPoint(latlng, mapObj.getZoom())
+    const size = mapObj.getSize()
+
+    // specify your WMS layer name
+    const params = {
+      request: 'GetFeatureInfo',
+      service: 'WMS',
+      srs: 'EPSG:4326',
+      styles: esriStreamLayer.wmsParams.styles,
+      transparent: esriStreamLayer.wmsParams.transparent,
+      version: esriStreamLayer.wmsParams.version,
+      format: esriStreamLayer.wmsParams.format,
+      bbox: mapObj.getBounds().toBBoxString(),
+      height: size.y,
+      width: size.x,
+      layers: esriStreamLayer.wmsParams.layers,
+      query_layers: esriStreamLayer.wmsParams.layers,
+      info_format: 'application/json',
+    };
+
+    params['x'] = point.x;
+    params['y'] = point.y;
+
+    // Construct URL
+    let url = wmsBaseURL + L.Util.getParamString(params, wmsBaseURL, true);
+    console.log(url)
+    fetch(
+      url,
       {
-        "Stream Network": esriStreamLayer,
-        "VIIRS Imagery": VIIRSlayer
-      },
-      {collapsed: false}
+        headers: {'ngrok-skip-browser-warning': 'true'}
+      }
     )
-    .addTo(mapObj)
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        REACHID = data['features'][0]['properties']['linkno']
+        updateStatusIcons({reachid: "ready"})
+        getForecastData(REACHID);
+        getRetrospectiveData(REACHID);
+      })
+      .catch(error => console.error('Error:', error));
+  }
 
   mapObj.on("click", event => {
     if (mapObj.getZoom() <= 9.5) return mapObj.flyTo(event.latlng, 10)
@@ -146,6 +209,10 @@ const app = (() => {
 
     if (mapMarker) mapObj.removeLayer(mapMarker)
     mapMarker = L.marker(event.latlng).addTo(mapObj)
+
+    // tmp
+    getFeatureInfo(event.latlng);
+
     // updateStatusIcons({reachid: "load", forecast: "clear", retro: "clear"})
     // $("#chart_modal").modal("show")
 
@@ -244,6 +311,7 @@ const app = (() => {
     let simpleForecast = chartDivs[0]
     let ensembleForecast = chartDivs[1]
     let probabilityTable = chartDivs[2]
+    $("#chart_modal").modal("show")
     ftl.tab("show")
     simpleForecast.html(`<img alt="loading signal" src=${loading_gif}>`)
     simpleForecast.css("text-align", "center")
@@ -273,7 +341,6 @@ const app = (() => {
       error: () => {
         updateStatusIcons({forecast: "fail"})
         giveForecastRetryButton(REACHID)
-        REACHID = null
       }
     })
   }
@@ -284,6 +351,7 @@ const app = (() => {
     updateDownloadLinks("clear")
     let tl = $("#historical_tab_link") // select divs with jquery so we can reuse them
     let plotdiv = chartDivs[3]
+    $("#chart_modal").modal("show")
     $.ajax({
       type: "GET",
       async: true,
@@ -390,7 +458,7 @@ const app = (() => {
 
   $("#forecast_tab_link").on("click", () => fix_buttons("forecast"))
   $("#historical_tab_link").on("click", () => fix_buttons("historical"))
-  $("#forecast_date").on("change", getForecastData)
+  $("#forecast_date").on("change", () => getForecastData())
 
   const clearMarkers = () => {
     if (mapMarker) mapObj.removeLayer(mapMarker)
