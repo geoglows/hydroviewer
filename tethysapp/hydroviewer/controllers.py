@@ -9,9 +9,9 @@ def home(request):
     """
     Controller for the app home page.
     """
-    dates = gg.data.dates().values.flatten().tolist()
-    dates = [str(date) for date in dates]
+    dates = gg.data.dates().values.flatten()
     dates = [(date, f'{date[0:4]}-{date[4:6]}-{date[6:8]}') for date in dates]
+    dates = sorted(dates, reverse=True)
     context = {
         'dates': dates,
         'endpoint': gg.data.DEFAULT_REST_ENDPOINT,
@@ -26,16 +26,16 @@ def get_forecast(request):
     forecast_date = request.GET.get('forecast_date', None)
 
     if not reach_id or not forecast_date:
-        return JsonResponse({'error': 'Missing requ ired parameters'})
+        return JsonResponse({'error': 'Missing required parameters'})
 
     source = 'hydroviewer'
     reach_id = int(reach_id)
     try:
+        ens = gg.data.forecast_ensembles(reach_id, date=forecast_date, source=source)
         rp = gg.data.return_periods(reach_id)
-        ens = gg.data.forecast_ensembles(reach_id, source=source)
         simple = gg.analyze.simple_forecast(ens)
-        simple = simple.rename(columns={'flow_med_cms': 'flow_median_cms'})
     except Exception as e:
+        print(e)
         return JsonResponse({'error': str(e)})
 
     return JsonResponse({
@@ -49,7 +49,7 @@ def get_forecast(request):
 def get_retrospective(request):
     reach_id = int(request.GET['reach_id'])
 
-    df = gg.data.retrospective(reach_id=reach_id)
+    df = gg.data.retrospective(river_id=reach_id)
     dayavg_df = gg.analyze.daily_averages(df)
     monavg_df = gg.analyze.monthly_averages(df)
     annavg_df = gg.analyze.annual_averages(df)
