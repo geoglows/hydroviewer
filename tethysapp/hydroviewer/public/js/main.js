@@ -1,10 +1,3 @@
-// XMLHttpRequest.prototype.open = (function(open) {
-//   return function(method,url,async) {
-//     open.apply(this,arguments);
-//     this.setRequestHeader('ngrok-skip-browser-warning', 'true');
-//     };
-// })(XMLHttpRequest.prototype.open);
-
 const app = (() => {
   'use strict'
 
@@ -13,7 +6,7 @@ const app = (() => {
   // const endpoint = "{{ endpoint }}";
   // const URL_getForecastData = "{% url 'hydroviewer:get-forecast' %}";
   // const URL_getHistoricalData = "{% url 'hydroviewer:get-retrospective' %}";
-  // const URL_findReachID = "{% url 'hydroviewer:find-river' %}";
+  // const URL_findRiverID = "{% url 'hydroviewer:find-river' %}";
   // const ESRI_LAYER_URL = = "";
 
   let loadingStatus = {reachid: "clear", forecast: "clear", retro: "clear"}
@@ -149,34 +142,93 @@ const app = (() => {
 
   // add a temporary stream layer to the map
   // const wmsBaseURL = 'http://localhost:8080/qgis-server'
-  const wmsBaseURL = 'https://287c-2601-681-b80-80d0-84a4-5b6b-b79c-3364.ngrok-free.app/qgis-server'
-  const layerName = 'test_dc1bc283_5137_4832_9e0e_9c8e5780d6b4'
-  const esriStreamLayer = L
+  // const wmsBaseURL = 'http://ec2-54-213-102-76.us-west-2.compute.amazonaws.com/qgis-server'
+  const wmsBaseURL = 'https://qgis-server.geoglows.org/qgis-server'
+  const layer0Name = 'small_tdx7_a5cf55c6_fc34_40b0_aeb5_b7ed74536ddd'
+  const layer1Name = 'medium_tdx7_ba2e3e65_b077_48b4_bdae_c52cb0f90eee'
+  const layer2Name = 'large_tdx7_b2a11633_9c49_4f47_9411_ae894f931d22'
+  const layer3Name = 'xlarge_tdx7_f731e4bb_4125_429f_bc40_8d7f404b0510'
+  const xlargeLayer = L
     .tileLayer.wms(wmsBaseURL, {
-      layers: layerName,
+      layers: layer3Name,
       format: 'image/png',
       transparent: true,
       styles: 'default'
     }).addTo(mapObj)
+  const largeLayer = L
+    .tileLayer.wms(wmsBaseURL, {
+      layers: [layer2Name, layer3Name],
+      format: 'image/png',
+      transparent: true,
+      styles: 'default'
+    })
+  const mediumLayer = L
+    .tileLayer.wms(wmsBaseURL, {
+      layers: [layer1Name, layer2Name, layer3Name],
+      format: 'image/png',
+      transparent: true,
+      styles: 'default'
+    })
+  const smallLayer = L
+    .tileLayer.wms(wmsBaseURL, {
+      layers: [layer0Name, layer1Name, layer2Name, layer3Name],
+      format: 'image/png',
+      transparent: true,
+      styles: 'default'
+    })
+
+  // only the xlarge layer is visible by default
+  // as you zoom in, turn on the layers that are appropriate for the zoom level
+  mapObj.on('zoomend', () => {
+    console.log(mapObj.getZoom())
+    const zoom = mapObj.getZoom()
+    if (zoom >= 11) {
+      xlargeLayer.remove()
+      largeLayer.remove()
+      mediumLayer.remove()
+      smallLayer.addTo(mapObj)
+    } else if (zoom >= 9) {
+      xlargeLayer.remove()
+      largeLayer.remove()
+      mediumLayer.addTo(mapObj)
+      smallLayer.remove()
+    } else if (zoom >= 6) {
+      xlargeLayer.remove()
+      largeLayer.addTo(mapObj)
+      mediumLayer.remove()
+      smallLayer.remove()
+    } else {
+      xlargeLayer.addTo(mapObj)
+      largeLayer.remove()
+      mediumLayer.remove()
+      smallLayer.remove()
+    }
+  })
 
   function getFeatureInfo(latlng) {
     var point = mapObj.latLngToContainerPoint(latlng, mapObj.getZoom())
     const size = mapObj.getSize()
+
+    // check which layer is added to the map
+    let queryLayer = xlargeLayer
+    if (mapObj.hasLayer(largeLayer)) queryLayer = largeLayer
+    if (mapObj.hasLayer(mediumLayer)) queryLayer = mediumLayer
+    if (mapObj.hasLayer(smallLayer)) queryLayer = smallLayer
 
     // specify your WMS layer name
     const params = {
       request: 'GetFeatureInfo',
       service: 'WMS',
       srs: 'EPSG:4326',
-      styles: esriStreamLayer.wmsParams.styles,
-      transparent: esriStreamLayer.wmsParams.transparent,
-      version: esriStreamLayer.wmsParams.version,
-      format: esriStreamLayer.wmsParams.format,
+      styles: queryLayer.wmsParams.styles,
+      transparent: queryLayer.wmsParams.transparent,
+      version: queryLayer.wmsParams.version,
+      format: queryLayer.wmsParams.format,
       bbox: mapObj.getBounds().toBBoxString(),
       height: size.y,
       width: size.x,
-      layers: esriStreamLayer.wmsParams.layers,
-      query_layers: esriStreamLayer.wmsParams.layers,
+      layers: queryLayer.wmsParams.layers,
+      query_layers: queryLayer.wmsParams.layers,
       info_format: 'application/json',
     };
 
@@ -186,12 +238,7 @@ const app = (() => {
     // Construct URL
     let url = wmsBaseURL + L.Util.getParamString(params, wmsBaseURL, true);
     console.log(url)
-    fetch(
-      url,
-      {
-        headers: {'ngrok-skip-browser-warning': 'true'}
-      }
-    )
+    fetch(url)
       .then(response => response.json())
       .then(data => {
         console.log(data);
@@ -204,7 +251,11 @@ const app = (() => {
   }
 
   mapObj.on("click", event => {
-    if (mapObj.getZoom() <= 9.5) return mapObj.flyTo(event.latlng, 10)
+    if (mapObj.getZoom() < 11) {
+      mapObj.flyTo(event.latlng, 11)
+      mapObj.fire('zoomend')
+      return
+    }
     mapObj.flyTo(event.latlng)
 
     if (mapMarker) mapObj.removeLayer(mapMarker)
@@ -249,7 +300,7 @@ const app = (() => {
     $.ajax({
       type: "GET",
       async: true,
-      url: `${URL_findReachID}${L.Util.getParamString({reach_id: prompt("Please enter a Reach ID to search for")})}`,
+      url: `${URL_findRiverID}${L.Util.getParamString({reach_id: prompt("Please enter a Reach ID to search for")})}`,
       success: response => {
         if (mapMarker) mapObj.removeLayer(mapMarker)
         mapMarker = L.marker(L.latLng(response.lat, response.lon)).addTo(mapObj)
