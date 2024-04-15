@@ -141,94 +141,33 @@ const app = (() => {
 //     .addTo(mapObj)
 
   // add a temporary stream layer to the map
-  // const wmsBaseURL = 'http://localhost:8080/qgis-server'
-  // const wmsBaseURL = 'http://ec2-54-213-102-76.us-west-2.compute.amazonaws.com/qgis-server'
-  const wmsBaseURL = 'https://qgis-server.geoglows.org/qgis-server'
-  const layer0Name = 'small_tdx7_a5cf55c6_fc34_40b0_aeb5_b7ed74536ddd'
-  const layer1Name = 'medium_tdx7_ba2e3e65_b077_48b4_bdae_c52cb0f90eee'
-  const layer2Name = 'large_tdx7_b2a11633_9c49_4f47_9411_ae894f931d22'
-  const layer3Name = 'xlarge_tdx7_f731e4bb_4125_429f_bc40_8d7f404b0510'
-  const xlargeLayer = L
+  const wmsBaseURL = 'https://qgis.geoglows.org/qgis-server'
+  const v2Layer = L
     .tileLayer.wms(wmsBaseURL, {
-      layers: layer3Name,
+      layers: 'geoglowsv2',
       format: 'image/png',
       transparent: true,
       styles: 'default'
     }).addTo(mapObj)
-  const largeLayer = L
-    .tileLayer.wms(wmsBaseURL, {
-      layers: [layer2Name, layer3Name],
-      format: 'image/png',
-      transparent: true,
-      styles: 'default'
-    })
-  const mediumLayer = L
-    .tileLayer.wms(wmsBaseURL, {
-      layers: [layer1Name, layer2Name, layer3Name],
-      format: 'image/png',
-      transparent: true,
-      styles: 'default'
-    })
-  const smallLayer = L
-    .tileLayer.wms(wmsBaseURL, {
-      layers: [layer0Name, layer1Name, layer2Name, layer3Name],
-      format: 'image/png',
-      transparent: true,
-      styles: 'default'
-    })
-
-  // only the xlarge layer is visible by default
-  // as you zoom in, turn on the layers that are appropriate for the zoom level
-  mapObj.on('zoomend', () => {
-    console.log(mapObj.getZoom())
-    const zoom = mapObj.getZoom()
-    if (zoom >= 11) {
-      xlargeLayer.remove()
-      largeLayer.remove()
-      mediumLayer.remove()
-      smallLayer.addTo(mapObj)
-    } else if (zoom >= 9) {
-      xlargeLayer.remove()
-      largeLayer.remove()
-      mediumLayer.addTo(mapObj)
-      smallLayer.remove()
-    } else if (zoom >= 6) {
-      xlargeLayer.remove()
-      largeLayer.addTo(mapObj)
-      mediumLayer.remove()
-      smallLayer.remove()
-    } else {
-      xlargeLayer.addTo(mapObj)
-      largeLayer.remove()
-      mediumLayer.remove()
-      smallLayer.remove()
-    }
-  })
 
   function getFeatureInfo(latlng) {
     var point = mapObj.latLngToContainerPoint(latlng, mapObj.getZoom())
     const size = mapObj.getSize()
-
-    // check which layer is added to the map
-    let queryLayer = xlargeLayer
-    if (mapObj.hasLayer(largeLayer)) queryLayer = largeLayer
-    if (mapObj.hasLayer(mediumLayer)) queryLayer = mediumLayer
-    if (mapObj.hasLayer(smallLayer)) queryLayer = smallLayer
 
     // specify your WMS layer name
     const params = {
       request: 'GetFeatureInfo',
       service: 'WMS',
       srs: 'EPSG:4326',
-      styles: queryLayer.wmsParams.styles,
-      transparent: queryLayer.wmsParams.transparent,
-      version: queryLayer.wmsParams.version,
-      format: queryLayer.wmsParams.format,
+      styles: v2Layer.wmsParams.styles,
+      transparent: v2Layer.wmsParams.transparent,
+      version: v2Layer.wmsParams.version,
+      format: v2Layer.wmsParams.format,
       bbox: mapObj.getBounds().toBBoxString(),
       height: size.y,
       width: size.x,
-      layers: queryLayer.wmsParams.layers,
-      query_layers: queryLayer.wmsParams.layers,
+      layers: v2Layer.wmsParams.layers,
+      query_layers: v2Layer.wmsParams.layers,
       info_format: 'application/json',
     };
 
@@ -242,7 +181,7 @@ const app = (() => {
       .then(response => response.json())
       .then(data => {
         console.log(data);
-        REACHID = data['features'][0]['properties']['linkno']
+        REACHID = data['features'][0]['properties']['LINKNO']
         updateStatusIcons({reachid: "ready"})
         getForecastData(REACHID);
         getRetrospectiveData(REACHID);
