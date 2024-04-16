@@ -141,8 +141,6 @@ const app = (() => {
 //     .addTo(mapObj)
 
   // add a temporary stream layer to the map
-  // const wmsBaseURL = 'http://localhost:8080/qgis-server'
-  // const wmsBaseURL = 'http://ec2-54-213-102-76.us-west-2.compute.amazonaws.com/qgis-server'
   const wmsBaseURL = 'https://qgis.geoglows.org/qgis-server'
   const layer0Name = 'geoglowsv2_level0'
   const layer1Name = 'geoglowsv2_level1'
@@ -177,10 +175,7 @@ const app = (() => {
       styles: 'default'
     })
 
-  // only the xlarge layer is visible by default
-  // as you zoom in, turn on the layers that are appropriate for the zoom level
   mapObj.on('zoomend', () => {
-    console.log(mapObj.getZoom())
     const zoom = mapObj.getZoom()
     if (zoom >= 11) {
       xlargeLayer.remove()
@@ -206,7 +201,7 @@ const app = (() => {
   })
 
   function getFeatureInfo(latlng) {
-    var point = mapObj.latLngToContainerPoint(latlng, mapObj.getZoom())
+    const point = mapObj.latLngToContainerPoint(latlng, mapObj.getZoom())
     const size = mapObj.getSize()
 
     // check which layer is added to the map
@@ -235,16 +230,11 @@ const app = (() => {
     params['x'] = point.x;
     params['y'] = point.y;
 
-    updateStatusIcons({reachid: "load"})
-    $("#chart_modal").modal("show")
-
     // Construct URL
     let url = wmsBaseURL + L.Util.getParamString(params, wmsBaseURL, true);
-    console.log(url)
     fetch(url)
       .then(response => response.json())
       .then(data => {
-        console.log(data);
         REACHID = data['features'][0]['properties']['LINKNO']
         updateStatusIcons({reachid: "ready"})
         getForecastData(REACHID);
@@ -264,12 +254,11 @@ const app = (() => {
     if (mapMarker) mapObj.removeLayer(mapMarker)
     mapMarker = L.marker(event.latlng).addTo(mapObj)
 
+    updateStatusIcons({reachid: "load", forecast: "clear", retro: "clear"})
+    $("#chart_modal").modal("show")
+
     // tmp
     getFeatureInfo(event.latlng);
-
-    // updateStatusIcons({reachid: "load", forecast: "clear", retro: "clear"})
-    // $("#chart_modal").modal("show")
-
     // L.esri
     //   .identifyFeatures({url: ESRI_LAYER_URL})
     //   .on(mapObj)
@@ -368,6 +357,8 @@ const app = (() => {
     $("#chart_modal").modal("show")
     ftl.tab("show")
     simpleForecast.html(`<img alt="loading signal" src=${loading_gif}>`)
+    ensembleForecast.html('')
+    probabilityTable.html('')
     simpleForecast.css("text-align", "center")
     updateStatusIcons({forecast: "load"})
     $.ajax({
