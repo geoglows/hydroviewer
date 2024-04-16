@@ -66,5 +66,5 @@ def get_retrospective(request):
 
 @controller(name='find-river', url='find-river')
 def find_river(request):
-    lat, lon = gg.streams.reach_to_latlon(int(request.GET['reach_id']))
+    lat, lon = gg.streams.river_to_latlon(int(request.GET['reach_id']))
     return JsonResponse({'lat': lat, 'lon': lon})
