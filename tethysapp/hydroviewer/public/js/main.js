@@ -119,129 +119,26 @@ const app = (() => {
     refreshLayerAnimation()
   })
 ////////////////////////////////////////////////////////////////////////  ADD WMS LAYERS FOR DRAINAGE LINES, VIIRS, ETC - SEE HOME.HTML TEMPLATE
-//   const esriStreamLayer = L
-//     .esri
-//     .dynamicMapLayer({
-//       url: ESRI_LAYER_URL,
-//       useCors: false,
-//       layers: [0],
-//       from: startDateTime,
-//       to: endDateTime
-//     })
-//     .addTo(mapObj)
-//   L.control
-//     .layers(
-//       basemapsJson,
-//       {
-//         "Stream Network": esriStreamLayer,
-//         "VIIRS Imagery": VIIRSlayer
-//       },
-//       {collapsed: false}
-//     )
-//     .addTo(mapObj)
-
-  // add a temporary stream layer to the map
-  const wmsBaseURL = 'https://qgis.geoglows.org/qgis-server'
-  const layer0Name = 'geoglowsv2_level0'
-  const layer1Name = 'geoglowsv2_level1'
-  const layer2Name = 'geoglowsv2_level2'
-  const layer3Name = 'geoglowsv2_level3'
-  const xlargeLayer = L
-    .tileLayer.wms(wmsBaseURL, {
-      layers: layer3Name,
-      format: 'image/png',
-      transparent: true,
-      styles: 'default'
-    }).addTo(mapObj)
-  const largeLayer = L
-    .tileLayer.wms(wmsBaseURL, {
-      layers: [layer2Name, layer3Name],
-      format: 'image/png',
-      transparent: true,
-      styles: 'default'
+  const esriStreamLayer = L
+    .esri
+    .dynamicMapLayer({
+      url: ESRI_LAYER_URL,
+      useCors: false,
+      layers: [0],
+      from: startDateTime,
+      to: endDateTime
     })
-  const mediumLayer = L
-    .tileLayer.wms(wmsBaseURL, {
-      layers: [layer1Name, layer2Name, layer3Name],
-      format: 'image/png',
-      transparent: true,
-      styles: 'default'
-    })
-  const smallLayer = L
-    .tileLayer.wms(wmsBaseURL, {
-      layers: [layer0Name, layer1Name, layer2Name, layer3Name],
-      format: 'image/png',
-      transparent: true,
-      styles: 'default'
-    })
-
-  mapObj.on('zoomend', () => {
-    const zoom = mapObj.getZoom()
-    if (zoom >= 11) {
-      xlargeLayer.remove()
-      largeLayer.remove()
-      mediumLayer.remove()
-      smallLayer.addTo(mapObj)
-    } else if (zoom >= 9) {
-      xlargeLayer.remove()
-      largeLayer.remove()
-      mediumLayer.addTo(mapObj)
-      smallLayer.remove()
-    } else if (zoom >= 6) {
-      xlargeLayer.remove()
-      largeLayer.addTo(mapObj)
-      mediumLayer.remove()
-      smallLayer.remove()
-    } else {
-      xlargeLayer.addTo(mapObj)
-      largeLayer.remove()
-      mediumLayer.remove()
-      smallLayer.remove()
-    }
-  })
-
-  function getFeatureInfo(latlng) {
-    const point = mapObj.latLngToContainerPoint(latlng, mapObj.getZoom())
-    const size = mapObj.getSize()
-
-    // check which layer is added to the map
-    let queryLayer = xlargeLayer
-    if (mapObj.hasLayer(largeLayer)) queryLayer = largeLayer
-    if (mapObj.hasLayer(mediumLayer)) queryLayer = mediumLayer
-    if (mapObj.hasLayer(smallLayer)) queryLayer = smallLayer
-
-    // specify your WMS layer name
-    const params = {
-      request: 'GetFeatureInfo',
-      service: 'WMS',
-      srs: 'EPSG:4326',
-      styles: queryLayer.wmsParams.styles,
-      transparent: queryLayer.wmsParams.transparent,
-      version: queryLayer.wmsParams.version,
-      format: queryLayer.wmsParams.format,
-      bbox: mapObj.getBounds().toBBoxString(),
-      height: size.y,
-      width: size.x,
-      layers: queryLayer.wmsParams.layers,
-      query_layers: queryLayer.wmsParams.layers,
-      info_format: 'application/json',
-    };
-
-    params['x'] = point.x;
-    params['y'] = point.y;
-
-    // Construct URL
-    let url = wmsBaseURL + L.Util.getParamString(params, wmsBaseURL, true);
-    fetch(url)
-      .then(response => response.json())
-      .then(data => {
-        REACHID = data['features'][0]['properties']['LINKNO']
-        updateStatusIcons({reachid: "ready"})
-        getForecastData(REACHID);
-        getRetrospectiveData(REACHID);
-      })
-      .catch(error => console.error('Error:', error));
-  }
+    .addTo(mapObj)
+  L.control
+    .layers(
+      basemapsJson,
+      {
+        "Stream Network": esriStreamLayer,
+        "VIIRS Imagery": VIIRSlayer
+      },
+      {collapsed: false}
+    )
+    .addTo(mapObj)
 
   mapObj.on("click", event => {
     if (mapObj.getZoom() < 11) {
@@ -257,26 +154,24 @@ const app = (() => {
     updateStatusIcons({reachid: "load", forecast: "clear", retro: "clear"})
     $("#chart_modal").modal("show")
 
-    // tmp
-    getFeatureInfo(event.latlng);
-    // L.esri
-    //   .identifyFeatures({url: ESRI_LAYER_URL})
-    //   .on(mapObj)
-    //   .at([event.latlng["lat"], event.latlng["lng"]])
-    //   .tolerance(10) // map pixels to buffer search point
-    //   .precision(3) // decimals in the returned coordinate pairs
-    //   .run((error, featureCollection) => {
-    //     if (error) {
-    //         updateStatusIcons({reachid: "fail"})
-    //         alert("Error finding the reach_id")
-    //         return
-    //     }
-    //     updateStatusIcons({reachid: "ready"})
-    //     selectedSegment.clearLayers()
-    //     selectedSegment.addData(featureCollection.features[0].geometry)
-    //     REACHID = featureCollection.features[0].properties["COMID (Stream Identifier)"]
-    //     fetchData(REACHID)
-    // })
+    L.esri
+      .identifyFeatures({url: ESRI_LAYER_URL})
+      .on(mapObj)
+      .at([event.latlng["lat"], event.latlng["lng"]])
+      .tolerance(10) // map pixels to buffer search point
+      .precision(3) // decimals in the returned coordinate pairs
+      .run((error, featureCollection) => {
+        if (error) {
+            updateStatusIcons({reachid: "fail"})
+            alert("Error finding the reach_id")
+            return
+        }
+        updateStatusIcons({reachid: "ready"})
+        selectedSegment.clearLayers()
+        selectedSegment.addData(featureCollection.features[0].geometry)
+        REACHID = featureCollection.features[0].properties["COMID (Stream Identifier)"]
+        fetchData(REACHID)
+    })
   })
 
 //////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
@@ -343,8 +238,8 @@ const app = (() => {
     $("#fcProbTable"),
     $("#retroPlot"),
     $("#dayAvgPlot"),
-    $("#monAvgPlot"),
-    $("#annAvgPlot"),
+    $("#annAvgPlot "),
+    $("#fdcPlot")
   ]
 
   const getForecastData = reachID => {
@@ -394,8 +289,8 @@ const app = (() => {
     if (!REACHID) return
     updateStatusIcons({retro: "load"})
     updateDownloadLinks("clear")
-    let tl = $("#historical_tab_link") // select divs with jquery so we can reuse them
-    let plotdiv = chartDivs[3]
+    let tl = $("#historical_tab_link")  // select divs with jquery so we can reuse them
+    chartDivs.slice(3).forEach(div => div.html(""))  // clear the historical data divs
     $("#chart_modal").modal("show")
     $.ajax({
       type: "GET",
@@ -405,10 +300,10 @@ const app = (() => {
       success: response => {
         tl.tab("show")
         tl.click()
-        plotdiv.html(response.retro)
+        $("#retroPlot").html(response.retro)
         $("#dayAvgPlot").html(response.dayAvg)
-        $("#monAvgPlot").html(response.monAvg)
         $("#annAvgPlot").html(response.annAvg)
+        $("#fdcPlot").html(response.fdc)
         updateDownloadLinks("set")
         updateStatusIcons({retro: "ready"})
       },

@@ -56,8 +56,8 @@
               <div class="panel panel-default">
                 <div id="retroPlot" class="panel-body modal-chart" style="height: auto"></div>
                 <div id="dayAvgPlot" class="panel-body modal-chart" style="height: auto"></div>
-                <div id="monAvgPlot" class="panel-body modal-chart" style="height: auto"></div>
                 <div id="annAvgPlot" class="panel-body modal-chart" style="height: auto"></div>
+                <div id="fdcPlot" class="panel-body modal-chart" style="height: auto"></div>
               </div>
             </div><!-- /.tab-pane -->
           </div>
@@ -150,7 +150,7 @@
     // CONSTANTS
     const REST_ENDPOINT = "{{ endpoint }}";
     const REST_VERSION = "{{ version }}";
-    const ESRI_LAYER_URL = "https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer";
+    const ESRI_LAYER_URL = "https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer";
     const VIIRS_LAYER_URL = "https://floods.ssec.wisc.edu/tiles/RIVER-FLDglobal-composite/{z}/{x}/{y}.png";
   </script>
   {# Leaflet #}
@@ -159,12 +159,12 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""></script>
   <script
-    src="https://unpkg.com/esri-leaflet@3.0.11/dist/esri-leaflet.js"
-    integrity="sha512-qSE34Lz9JHdaPt3AZsi6L3dcqYHO9nnQEIxfrkgrRqqe+R0DPuAMu+j2vlb92zPka9O+XHZV4+9G5/rHT5ADsQ=="
+    src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js"
+    integrity="sha512-G4+fuKc1B96F0sUG7eKtgiJr0JM3iQC4bfc8WtYvmm7msHES0Hst2mLWASPb8zZk91tqMG86AjP0tgXIEFPPUA=="
     crossorigin=""></script>
   <script
-    src="https://unpkg.com/esri-leaflet-vector@4.2.2/dist/esri-leaflet-vector.js"
-    integrity="sha512-EBPUr/aLfZBYAFeLJ2WDvTYjjFKAOa6nlySW/EBEalUk+vCWJca51+QW8sa+R/Bg+Umzs7OkL6LyR/OlcjaXiA=="
+    src="https://unpkg.com/esri-leaflet-vector@4.2.3/dist/esri-leaflet-vector.js"
+    integrity="sha512-/H7f4mjvCB73Rsi7cWCW0Z3Zl1InqvtGOQsipk5ClXhAxfrw6GSjEnPz2VVTuh7dE29ws8tS3OGHowmkEae2/A=="
     crossorigin=""></script>
   {# Plotly #}
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
