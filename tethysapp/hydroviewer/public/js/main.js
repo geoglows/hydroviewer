@@ -141,8 +141,8 @@ const app = (() => {
     .addTo(mapObj)
 
   mapObj.on("click", event => {
-    if (mapObj.getZoom() < 11) {
-      mapObj.flyTo(event.latlng, 11)
+    if (mapObj.getZoom() < 12.5) {
+      mapObj.flyTo(event.latlng, 12.5)
       mapObj.fire('zoomend')
       return
     }
@@ -159,7 +159,7 @@ const app = (() => {
       .on(mapObj)
       .at([event.latlng["lat"], event.latlng["lng"]])
       .tolerance(10) // map pixels to buffer search point
-      .precision(3) // decimals in the returned coordinate pairs
+      .precision(6) // decimals in the returned coordinate pairs
       .run((error, featureCollection) => {
         if (error) {
             updateStatusIcons({reachid: "fail"})
@@ -169,7 +169,7 @@ const app = (() => {
         updateStatusIcons({reachid: "ready"})
         selectedSegment.clearLayers()
         selectedSegment.addData(featureCollection.features[0].geometry)
-        REACHID = featureCollection.features[0].properties["COMID (Stream Identifier)"]
+        REACHID = featureCollection.features[0].properties["TDX Hydro Link Number"]
         fetchData(REACHID)
     })
   })
