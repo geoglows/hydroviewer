@@ -29,24 +29,14 @@
         <div class="modal-body">
           <!-- Nav tabs -->
           <ul class="nav nav-tabs">
-            <li class="active"><a id="forecast_tab_link" href="#forecast" class="nav-link active" data-bs-toggle="tab">Forecasts</a>
-            </li>
-            <li class="nav-item"><a id="historical_tab_link" href="#historical" class="nav-link" data-bs-toggle="tab">Retrospective</a>
-            </li>
+            <li class="active"><a id="forecast_tab_link" href="#forecast" class="nav-link active" data-bs-toggle="tab">Forecasts</a></li>
+            <li class="nav-item"><a id="historical_tab_link" href="#historical" class="nav-link" data-bs-toggle="tab">Retrospective</a></li>
           </ul>
 
           <!-- Tab panes -->
           <div class="tab-content">
             <div role="tabpanel" class="tab-pane active" id="forecast">
               <div class="panel panel-default">
-                <div id="forecast-date-selector">
-                  <label for="forecast_date">Forecast Date: </label>
-                  <select class="form-control" id="forecast_date" name="forecast_date">
-                    {% for ymd, display in dates %}
-                      <option value="{{ ymd }}">{{ display }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
                 <div id="forecastPlot" style="height: auto"></div>
                 <div id="fcEnsPlot" style="height: auto"></div>
                 <div id="fcProbTable" style="height: auto"></div>
@@ -62,11 +52,16 @@
             </div><!-- /.tab-pane -->
           </div>
         </div>
-        <div class="modal-footer">
-          <a class="btn btn-success" role="button" id="download-forecast-btn" target="_blank">Download Forecast</a>
-          <a class="btn btn-success" role="button" id="download-historical-btn" target="_blank" style="display: none">Download
-            Historical Data</a>
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        <div class="modal-footer" style="justify-content: space-between">
+          <div id="forecast-date-selector">
+            <label for="forecast_date">Forecast Date: </label>
+            <input type="date" id="forecast_date" name="forecast_date" min="2024-07-01" max="{% now "Y-m-d" %}" value="{% now "Y-m-d" %}" onkeydown="return false">
+          </div>
+          <div>
+            <a class="btn btn-success" role="button" id="download-forecast-btn" target="_blank">Download Forecast</a>
+            <a class="btn btn-success" role="button" id="download-historical-btn" target="_blank" style="display: none">Download Historical Data</a>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
         </div>
       </div>
     </div>

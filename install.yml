@@ -15,6 +15,8 @@ requirements:
       - defaults
     packages:
       - geoglows>=1.6.3
+      - natsort
+      - plotly
 
   pip:
 

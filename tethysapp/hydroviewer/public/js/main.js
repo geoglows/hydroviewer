@@ -141,8 +141,8 @@ const app = (() => {
     .addTo(mapObj)
 
   mapObj.on("click", event => {
-    if (mapObj.getZoom() < 12.5) {
-      mapObj.flyTo(event.latlng, 12.5)
+    if (mapObj.getZoom() < 15) {
+      mapObj.flyTo(event.latlng, 15)
       mapObj.fire('zoomend')
       return
     }
@@ -154,7 +154,8 @@ const app = (() => {
     updateStatusIcons({reachid: "load", forecast: "clear", retro: "clear"})
     $("#chart_modal").modal("show")
 
-    L.esri
+    L
+      .esri
       .identifyFeatures({url: ESRI_LAYER_URL})
       .on(mapObj)
       .at([event.latlng["lat"], event.latlng["lng"]])
@@ -162,16 +163,16 @@ const app = (() => {
       .precision(6) // decimals in the returned coordinate pairs
       .run((error, featureCollection) => {
         if (error) {
-            updateStatusIcons({reachid: "fail"})
-            alert("Error finding the reach_id")
-            return
+          updateStatusIcons({reachid: "fail"})
+          alert("Error finding the reach_id")
+          return
         }
         updateStatusIcons({reachid: "ready"})
         selectedSegment.clearLayers()
         selectedSegment.addData(featureCollection.features[0].geometry)
         REACHID = featureCollection.features[0].properties["TDX Hydro Link Number"]
         fetchData(REACHID)
-    })
+      })
   })
 
 //////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
@@ -259,7 +260,7 @@ const app = (() => {
     $.ajax({
       type: "GET",
       async: true,
-      data: {reach_id: REACHID, forecast_date: $("#forecast_date").val()},
+      data: {reach_id: REACHID, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, forecast_date: $("#forecast_date").val().replaceAll("-", "")},
       url: URL_getForecastData,
       success: response => {
         ftl.tab("show")
