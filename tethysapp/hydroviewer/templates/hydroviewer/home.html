@@ -29,24 +29,14 @@
         <div class="modal-body">
           <!-- Nav tabs -->
           <ul class="nav nav-tabs">
-            <li class="active"><a id="forecast_tab_link" href="#forecast" class="nav-link active" data-bs-toggle="tab">Forecasts</a>
-            </li>
-            <li class="nav-item"><a id="historical_tab_link" href="#historical" class="nav-link" data-bs-toggle="tab">Retrospective</a>
-            </li>
+            <li class="active"><a id="forecast_tab_link" href="#forecast" class="nav-link active" data-bs-toggle="tab">Forecasts</a></li>
+            <li class="nav-item"><a id="historical_tab_link" href="#historical" class="nav-link" data-bs-toggle="tab">Retrospective</a></li>
           </ul>
 
           <!-- Tab panes -->
           <div class="tab-content">
             <div role="tabpanel" class="tab-pane active" id="forecast">
               <div class="panel panel-default">
-                <div id="forecast-date-selector">
-                  <label for="forecast_date">Forecast Date: </label>
-                  <select class="form-control" id="forecast_date" name="forecast_date">
-                    {% for ymd, display in dates %}
-                      <option value="{{ ymd }}">{{ display }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
                 <div id="forecastPlot" style="height: auto"></div>
                 <div id="fcEnsPlot" style="height: auto"></div>
                 <div id="fcProbTable" style="height: auto"></div>
@@ -56,17 +46,22 @@
               <div class="panel panel-default">
                 <div id="retroPlot" class="panel-body modal-chart" style="height: auto"></div>
                 <div id="dayAvgPlot" class="panel-body modal-chart" style="height: auto"></div>
-                <div id="monAvgPlot" class="panel-body modal-chart" style="height: auto"></div>
                 <div id="annAvgPlot" class="panel-body modal-chart" style="height: auto"></div>
+                <div id="fdcPlot" class="panel-body modal-chart" style="height: auto"></div>
               </div>
             </div><!-- /.tab-pane -->
           </div>
         </div>
-        <div class="modal-footer">
-          <a class="btn btn-success" role="button" id="download-forecast-btn" target="_blank">Download Forecast</a>
-          <a class="btn btn-success" role="button" id="download-historical-btn" target="_blank" style="display: none">Download
-            Historical Data</a>
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        <div class="modal-footer" style="justify-content: space-between">
+          <div id="forecast-date-selector">
+            <label for="forecast_date">Forecast Date: </label>
+            <input type="date" id="forecast_date" name="forecast_date" min="2024-07-01" max="{% now "Y-m-d" %}" value="{% now "Y-m-d" %}" onkeydown="return false">
+          </div>
+          <div>
+            <a class="btn btn-success" role="button" id="download-forecast-btn" target="_blank">Download Forecast</a>
+            <a class="btn btn-success" role="button" id="download-historical-btn" target="_blank" style="display: none">Download Historical Data</a>
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
         </div>
       </div>
     </div>
@@ -91,9 +86,7 @@
             The model provides a few main outputs:
             <ul>
               <li>Daily 15 day ensemble forecasts at 3 hour time steps</li>
-              <li>Retrospective simulation of daily average flows covering 1 January 2024 to the present with 5-12 days
-                of lag
-              </li>
+              <li>Retrospective daily average flows from 1 January 2024 to present with 5-12 days of lag</li>
               <li>GIS datasets for the streams and catchments</li>
               <li>Model configuration files</li>
               <li>River context information such as river names and country</li>
@@ -102,9 +95,11 @@
           <h2 style="text-align: center">VIIRS 5-Day Composite Imagery</h2>
           <p>VIIRS imagery is a web mapping service layer derived from the VIIRS satellites' optical sensors.</p>
           <a href="https://www.star.nesdis.noaa.gov/jpss/images/Harvey/show/VIIRSFloodDetectionMapQuickGuide.pdf" target="_blank">VIIRS
-            Flood Detection Map Quick Guide (PDF) (noaa.gov)</a><br>
+            Flood Detection Map Quick Guide (PDF) (noaa.gov)</a>
+          <br>
           <a href="https://www.ssec.wisc.edu/flood-map-demo/" target="_blank">VIIRS Quick Start Guide/Flood Map Demo
-            (wisc.edu)</a><br>
+            (wisc.edu)</a>
+          <br>
           <img src="{% static 'hydroviewer/images/VIIRS_legend.png' %}" alt="legend" style="width: 80%; margin: auto">
           <ul>
             <li>MS: missing data (transparent)</li>
@@ -145,12 +140,12 @@
     // URLS
     const URL_getForecastData = "{% url 'hydroviewer:get-forecast' %}";
     const URL_getHistoricalData = "{% url 'hydroviewer:get-retrospective' %}";
-    const URL_findReachID = "{% url 'hydroviewer:find-river' %}";
+    const URL_findRiverID = "{% url 'hydroviewer:find-river' %}";
 
     // CONSTANTS
     const REST_ENDPOINT = "{{ endpoint }}";
     const REST_VERSION = "{{ version }}";
-    const ESRI_LAYER_URL = "https://livefeeds2.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer";
+    const ESRI_LAYER_URL = "https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer";
     const VIIRS_LAYER_URL = "https://floods.ssec.wisc.edu/tiles/RIVER-FLDglobal-composite/{z}/{x}/{y}.png";
   </script>
   {# Leaflet #}
@@ -159,12 +154,12 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""></script>
   <script
-    src="https://unpkg.com/esri-leaflet@3.0.11/dist/esri-leaflet.js"
-    integrity="sha512-qSE34Lz9JHdaPt3AZsi6L3dcqYHO9nnQEIxfrkgrRqqe+R0DPuAMu+j2vlb92zPka9O+XHZV4+9G5/rHT5ADsQ=="
+    src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js"
+    integrity="sha512-G4+fuKc1B96F0sUG7eKtgiJr0JM3iQC4bfc8WtYvmm7msHES0Hst2mLWASPb8zZk91tqMG86AjP0tgXIEFPPUA=="
     crossorigin=""></script>
   <script
-    src="https://unpkg.com/esri-leaflet-vector@4.2.2/dist/esri-leaflet-vector.js"
-    integrity="sha512-EBPUr/aLfZBYAFeLJ2WDvTYjjFKAOa6nlySW/EBEalUk+vCWJca51+QW8sa+R/Bg+Umzs7OkL6LyR/OlcjaXiA=="
+    src="https://unpkg.com/esri-leaflet-vector@4.2.3/dist/esri-leaflet-vector.js"
+    integrity="sha512-/H7f4mjvCB73Rsi7cWCW0Z3Zl1InqvtGOQsipk5ClXhAxfrw6GSjEnPz2VVTuh7dE29ws8tS3OGHowmkEae2/A=="
     crossorigin=""></script>
   {# Plotly #}
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>

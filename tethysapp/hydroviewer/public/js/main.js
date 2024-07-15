@@ -6,7 +6,7 @@ const app = (() => {
   // const endpoint = "{{ endpoint }}";
   // const URL_getForecastData = "{% url 'hydroviewer:get-forecast' %}";
   // const URL_getHistoricalData = "{% url 'hydroviewer:get-retrospective' %}";
-  // const URL_findReachID = "{% url 'hydroviewer:find-river' %}";
+  // const URL_findRiverID = "{% url 'hydroviewer:find-river' %}";
   // const ESRI_LAYER_URL = = "";
 
   let loadingStatus = {reachid: "clear", forecast: "clear", retro: "clear"}
@@ -129,7 +129,8 @@ const app = (() => {
       to: endDateTime
     })
     .addTo(mapObj)
-  L.control
+  L
+    .control
     .layers(
       basemapsJson,
       {
@@ -141,32 +142,38 @@ const app = (() => {
     .addTo(mapObj)
 
   mapObj.on("click", event => {
-    if (mapObj.getZoom() <= 9.5) return mapObj.flyTo(event.latlng, 10)
+    if (mapObj.getZoom() < 16) {
+      mapObj.flyTo(event.latlng, 16)
+      mapObj.fire('zoomend')
+      return
+    }
     mapObj.flyTo(event.latlng)
 
     if (mapMarker) mapObj.removeLayer(mapMarker)
     mapMarker = L.marker(event.latlng).addTo(mapObj)
-    // updateStatusIcons({reachid: "load", forecast: "clear", retro: "clear"})
-    // $("#chart_modal").modal("show")
 
-    // L.esri
-    //   .identifyFeatures({url: ESRI_LAYER_URL})
-    //   .on(mapObj)
-    //   .at([event.latlng["lat"], event.latlng["lng"]])
-    //   .tolerance(10) // map pixels to buffer search point
-    //   .precision(3) // decimals in the returned coordinate pairs
-    //   .run((error, featureCollection) => {
-    //     if (error) {
-    //         updateStatusIcons({reachid: "fail"})
-    //         alert("Error finding the reach_id")
-    //         return
-    //     }
-    //     updateStatusIcons({reachid: "ready"})
-    //     selectedSegment.clearLayers()
-    //     selectedSegment.addData(featureCollection.features[0].geometry)
-    //     REACHID = featureCollection.features[0].properties["COMID (Stream Identifier)"]
-    //     fetchData(REACHID)
-    // })
+    updateStatusIcons({reachid: "load", forecast: "clear", retro: "clear"})
+    $("#chart_modal").modal("show")
+
+    L
+      .esri
+      .identifyFeatures({url: ESRI_LAYER_URL})
+      .on(mapObj)
+      .at([event.latlng["lat"], event.latlng["lng"]])
+      .tolerance(10) // map pixels to buffer search point
+      .precision(6) // decimals in the returned coordinate pairs
+      .run((error, featureCollection) => {
+        if (error) {
+          updateStatusIcons({reachid: "fail"})
+          alert("Error finding the reach_id")
+          return
+        }
+        updateStatusIcons({reachid: "ready"})
+        selectedSegment.clearLayers()
+        selectedSegment.addData(featureCollection.features[0].geometry)
+        REACHID = featureCollection.features[0].properties["TDX Hydro Link Number"]
+        fetchData(REACHID)
+      })
   })
 
 //////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
@@ -182,7 +189,7 @@ const app = (() => {
     $.ajax({
       type: "GET",
       async: true,
-      url: `${URL_findReachID}${L.Util.getParamString({reach_id: prompt("Please enter a Reach ID to search for")})}`,
+      url: `${URL_findRiverID}${L.Util.getParamString({reach_id: prompt("Please enter a Reach ID to search for")})}`,
       success: response => {
         if (mapMarker) mapObj.removeLayer(mapMarker)
         mapMarker = L.marker(L.latLng(response.lat, response.lon)).addTo(mapObj)
@@ -233,8 +240,8 @@ const app = (() => {
     $("#fcProbTable"),
     $("#retroPlot"),
     $("#dayAvgPlot"),
-    $("#monAvgPlot"),
-    $("#annAvgPlot"),
+    $("#annAvgPlot "),
+    $("#fdcPlot")
   ]
 
   const getForecastData = reachID => {
@@ -244,14 +251,17 @@ const app = (() => {
     let simpleForecast = chartDivs[0]
     let ensembleForecast = chartDivs[1]
     let probabilityTable = chartDivs[2]
+    $("#chart_modal").modal("show")
     ftl.tab("show")
     simpleForecast.html(`<img alt="loading signal" src=${loading_gif}>`)
+    ensembleForecast.html('')
+    probabilityTable.html('')
     simpleForecast.css("text-align", "center")
     updateStatusIcons({forecast: "load"})
     $.ajax({
       type: "GET",
       async: true,
-      data: {reach_id: REACHID, forecast_date: $("#forecast_date").val()},
+      data: {reach_id: REACHID, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, forecast_date: $("#forecast_date").val().replaceAll("-", "")},
       url: URL_getForecastData,
       success: response => {
         ftl.tab("show")
@@ -273,7 +283,6 @@ const app = (() => {
       error: () => {
         updateStatusIcons({forecast: "fail"})
         giveForecastRetryButton(REACHID)
-        REACHID = null
       }
     })
   }
@@ -282,8 +291,10 @@ const app = (() => {
     if (!REACHID) return
     updateStatusIcons({retro: "load"})
     updateDownloadLinks("clear")
-    let tl = $("#historical_tab_link") // select divs with jquery so we can reuse them
-    let plotdiv = chartDivs[3]
+    let tl = $("#historical_tab_link")  // select divs with jquery so we can reuse them
+    chartDivs.slice(3).forEach(div => div.html(""))  // clear the historical data divs
+    $("#chart_modal").modal("show")
+    $("#retroPlot").html(`<img alt="loading signal" src=${loading_gif}>`)
     $.ajax({
       type: "GET",
       async: true,
@@ -292,10 +303,10 @@ const app = (() => {
       success: response => {
         tl.tab("show")
         tl.click()
-        plotdiv.html(response.retro)
+        $("#retroPlot").html(response.retro)
         $("#dayAvgPlot").html(response.dayAvg)
-        $("#monAvgPlot").html(response.monAvg)
         $("#annAvgPlot").html(response.annAvg)
+        $("#fdcPlot").html(response.fdc)
         updateDownloadLinks("set")
         updateStatusIcons({retro: "ready"})
       },
@@ -390,7 +401,7 @@ const app = (() => {
 
   $("#forecast_tab_link").on("click", () => fix_buttons("forecast"))
   $("#historical_tab_link").on("click", () => fix_buttons("historical"))
-  $("#forecast_date").on("change", getForecastData)
+  $("#forecast_date").on("change", () => getForecastData())
 
   const clearMarkers = () => {
     if (mapMarker) mapObj.removeLayer(mapMarker)

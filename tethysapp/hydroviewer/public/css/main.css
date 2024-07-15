@@ -1,6 +1,6 @@
 /* MAP STYLES */
 .modal-chart {
-    height: min(3in, 550px)
+    height: min(4in, 550px)
 }
 
 .load-status {
@@ -174,7 +174,7 @@
 
 #fcProbTable {
     height: auto;
-    min-height: 250px;
+    min-height: 300px;
     align-items: center;
     display: flex;
     justify-content: center;
