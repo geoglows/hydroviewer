@@ -129,7 +129,8 @@ const app = (() => {
       to: endDateTime
     })
     .addTo(mapObj)
-  L.control
+  L
+    .control
     .layers(
       basemapsJson,
       {
@@ -141,8 +142,8 @@ const app = (() => {
     .addTo(mapObj)
 
   mapObj.on("click", event => {
-    if (mapObj.getZoom() < 15) {
-      mapObj.flyTo(event.latlng, 15)
+    if (mapObj.getZoom() < 16) {
+      mapObj.flyTo(event.latlng, 16)
       mapObj.fire('zoomend')
       return
     }
@@ -293,6 +294,7 @@ const app = (() => {
     let tl = $("#historical_tab_link")  // select divs with jquery so we can reuse them
     chartDivs.slice(3).forEach(div => div.html(""))  // clear the historical data divs
     $("#chart_modal").modal("show")
+    $("#retroPlot").html(`<img alt="loading signal" src=${loading_gif}>`)
     $.ajax({
       type: "GET",
       async: true,

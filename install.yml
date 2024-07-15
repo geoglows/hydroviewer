@@ -14,7 +14,7 @@ requirements:
       - cf-staging
       - defaults
     packages:
-      - geoglows>=1.6.3
+      - geoglows>=1.7.0
       - natsort
       - plotly
 
