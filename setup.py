@@ -15,7 +15,7 @@ resource_files = find_all_resource_files(app_package, TethysAppBase.package_name
 
 setup(
     name=release_package,
-    version='0.0.1',
+    version='1.0.0',
     description='Graphical interface for the GEOGLOWS Hydrologic Model Version 2',
     long_description='',
     keywords='',
