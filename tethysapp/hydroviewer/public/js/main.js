@@ -13,10 +13,13 @@ const app = (() => {
   let REACHID
   let mapMarker = null
 
+  const MIN_QUERY_ZOOM = 12
+
 //////////////////////////////////////////////////////////////////////// ESRI Map
   const mapObj = L.map("map", {
     zoom: 3,
     minZoom: 2,
+    maxZoom: 15,
     boxZoom: true,
     maxBounds: L.latLngBounds(L.latLng(-100, -225), L.latLng(100, 225)),
     center: [20, 0]
@@ -142,12 +145,14 @@ const app = (() => {
     .addTo(mapObj)
 
   mapObj.on("click", event => {
-    if (mapObj.getZoom() < 16) {
-      mapObj.flyTo(event.latlng, 16)
+    if (mapObj.getZoom() < MIN_QUERY_ZOOM) {
+      mapObj.flyTo(event.latlng, MIN_QUERY_ZOOM, {duration: 0.5})
       mapObj.fire('zoomend')
       return
     }
-    mapObj.flyTo(event.latlng)
+    mapObj.panTo(event.latlng)
+    mapObj.fire('zoomend')
+    mapObj.fire('moveend')
 
     if (mapMarker) mapObj.removeLayer(mapMarker)
     mapMarker = L.marker(event.latlng).addTo(mapObj)
@@ -168,10 +173,14 @@ const app = (() => {
           alert("Error finding the reach_id")
           return
         }
-        updateStatusIcons({reachid: "ready"})
         selectedSegment.clearLayers()
-        selectedSegment.addData(featureCollection.features[0].geometry)
         REACHID = featureCollection.features[0].properties["TDX Hydro Link Number"]
+        if (REACHID === "Null") {
+          updateStatusIcons({reachid: "fail"})
+          alert("Error finding the reach_id")
+          return
+        }
+        selectedSegment.addData(featureCollection.features[0].geometry)
         fetchData(REACHID)
       })
   })
@@ -182,7 +191,7 @@ const app = (() => {
     updateStatusIcons({reachid: "ready", forecast: "clear", retro: "clear"})
     $("#chart_modal").modal("show")
     clearChartDivs()
-    getForecastData()
+    document.getElementById('auto-load-forecasts').checked ? getForecastData() : giveForecastRetryButton(REACHID)
     document.getElementById('auto-load-retrospective').checked ? getRetrospectiveData() : giveRetrospectiveRetryButton(REACHID)
   }
   const findReachID = () => {
@@ -193,7 +202,7 @@ const app = (() => {
       success: response => {
         if (mapMarker) mapObj.removeLayer(mapMarker)
         mapMarker = L.marker(L.latLng(response.lat, response.lon)).addTo(mapObj)
-        mapObj.flyTo(L.latLng(response["lat"], response["lon"]), 9)
+        mapObj.flyTo(L.latLng(response["lat"], response["lon"]), MIN_QUERY_ZOOM)
       },
       error: () => alert("Unable to find that reach_id. Please check the number and try again.")
     })
@@ -219,7 +228,7 @@ const app = (() => {
       .split(",")
     if (mapMarker) mapObj.removeLayer(mapMarker)
     mapMarker = L.marker(L.latLng(ll[0], ll[1])).addTo(mapObj)
-    mapObj.flyTo(L.latLng(ll[0], ll[1]), 9)
+    mapObj.flyTo(L.latLng(ll[0], ll[1]), MIN_QUERY_ZOOM)
   }
 
 //////////////////////////////////////////////////////////////////////// UPDATE DOWNLOAD LINKS FUNCTION
