@@ -1,0 +1,241 @@
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow-y: auto;
+}
+
+.map {
+    height: 80%;
+    cursor: pointer;
+}
+
+.controls-wrapper {
+    height: auto;
+    margin: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.time-slider-wrapper {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.map-overlay-element {
+    background-color: rgba(255, 255, 255, 0.40);
+    padding: 5px 10px;
+}
+
+.legend {
+    bottom: 30px;
+    right: 0;
+    max-height: 90%;
+    overflow-y: auto;
+    margin: 5px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px #ddd solid;
+}
+
+.legend:hover {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.load-status {
+    text-align: center;
+    font-weight: bold;
+    padding: 0 1em;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.status-load {
+    color: orange;
+}
+
+.status-ready {
+    color: green;
+}
+
+.status-failed {
+    color: red;
+}
+
+.status-clear {
+    color: lightgrey;
+    opacity: 25%;
+}
+
+.chart {
+    height: min(4in, 550px)
+}
+
+.controls-box {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    margin: 10px 0;
+}
+
+/*!* MAP STYLES *!*/
+
+
+/*.modal-title {*/
+/*    display: flex;*/
+/*    justify-content: space-around;*/
+/*}*/
+
+/*.btn-close {*/
+/*    margin: 0 !important;*/
+/*    padding: 0;*/
+/*    flex-grow: 0;*/
+/*}*/
+
+/*.row {*/
+/*    width: 100%;*/
+/*}*/
+
+/*#app-content-wrapper #app-content {*/
+/*    height: 100%;*/
+/*}*/
+
+/*#inner-app-content {*/
+/*    padding: 0;*/
+/*    height: 100%;*/
+/*}*/
+
+/*#chart_modal .modal-dialog {*/
+/*    width: 85%*/
+/*}*/
+
+/*#app-navigation li {*/
+/*    list-style-type: none;*/
+/*}*/
+
+/*#inner-app-content .intro_message {*/
+/*    margin-bottom: 0;*/
+/*}*/
+
+/*.map {*/
+/*    height: 100%;*/
+/*    cursor: pointer;*/
+/*}*/
+
+/*.map:-moz-full-screen {*/
+/*    width: 100%;*/
+/*}*/
+
+/*.map:-webkit-full-screen {*/
+/*    width: 100%;*/
+/*}*/
+
+/*.map:-ms-fullscreen {*/
+/*    width: 100%;*/
+/*}*/
+
+/*.map:fullscreen {*/
+/*    width: 100%;*/
+/*}*/
+
+/*.long-term-select {*/
+/*    width: 100%;*/
+/*}*/
+
+/*.select-label {*/
+/*    padding-left: 10px;*/
+/*}*/
+
+/*@-moz-document url-prefix() {*/
+/*    fieldset {*/
+/*        display: table-cell;*/
+/*    }*/
+/*}*/
+
+/*.collapse-control a:after {*/
+/*    font-family: 'Glyphicons Halflings';*/
+/*    content: "\e114";*/
+/*    float: right;*/
+/*    color: #34495E;*/
+/*}*/
+
+/*.warning-val {*/
+/*    font: 400 12px Arial;*/
+/*    color: #888;*/
+/*    margin: 15px 0;*/
+/*}*/
+
+/*.slider {*/
+/*    -webkit-appearance: none;*/
+/*    width: 100%;*/
+/*    height: 25px;*/
+/*    background: #d3d3d3;*/
+/*    outline: none;*/
+/*    opacity: 0.7;*/
+/*    -webkit-transition: .2s;*/
+/*    transition: opacity .2s;*/
+/*}*/
+
+/*.slider::-webkit-slider-thumb {*/
+/*    -webkit-appearance: none;*/
+/*    appearance: none;*/
+/*    width: 25px;*/
+/*    height: 25px;*/
+/*    background: #4CAF50;*/
+/*    cursor: pointer;*/
+/*}*/
+
+/*.slider::-moz-range-thumb {*/
+/*    width: 25px;*/
+/*    height: 25px;*/
+/*    background: #4CAF50;*/
+/*    cursor: pointer;*/
+/*}*/
+
+/*.mybtn {*/
+/*    color: black;*/
+/*    border-color: black;*/
+/*    margin: 10px;*/
+/*}*/
+
+/*.animatebtn {*/
+/*    color: black;*/
+/*}*/
+
+/*#mouse-position {*/
+/*    margin: 10px;*/
+/*    background-color: white;*/
+/*    padding: 10px 15px;*/
+/*    font-weight: bold;*/
+/*}*/
+
+/*#fcProbTable {*/
+/*    height: auto;*/
+/*    min-height: 300px;*/
+/*    align-items: center;*/
+/*    display: flex;*/
+/*    justify-content: center;*/
+/*}*/
+/*#fcProbTable > table {*/
+/*    width: 80%;*/
+/*    min-width: 750px;*/
+/*    border-collapse: collapse;*/
+/*}*/
+
+/*th {*/
+/*    background-color: lightgrey;*/
+/*    font-weight: bold;*/
+/*}*/
+
+/*th, tr, td {*/
+/*    text-align: center;*/
+/*    padding: 10px;*/
+/*}*/
