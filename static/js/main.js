@@ -3,10 +3,6 @@ const app = (() => {
 
 //////////////////////////////////////////////////////////////////////// State Variables
   ////// URLS FROM TEMPLATE RENDER
-  // const endpoint = "{{ endpoint }}";
-  const URL_getForecastData = 'https://beta.apps.geoglows.org/apps/hydroviewer/get-forecast'
-  const URL_getRetrospectiveData = 'https://beta.apps.geoglows.org/apps/hydroviewer/get-retrospective'
-  const URL_findRiverID = 'https://beta.apps.geoglows.org/apps/hydroviewer/find-river'
   const REST_ENDPOINT = 'https://geoglows.ecmwf.int/api/'
   const ESRI_LAYER_URL = 'https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer'
   const LOADING_GIF = 'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif'
@@ -15,12 +11,10 @@ const app = (() => {
   document.getElementById("forecast_date").max = new Date().toISOString().split("T")[0]
   document.getElementById("forecast_date").value = new Date().toISOString().split("T")[0]
 
-
   let loadingStatus = {reachid: "clear", forecast: "clear", retro: "clear"}
   let REACHID
-  let mapMarker = null
-
   const MIN_QUERY_ZOOM = 12
+  let mapMarker = null
 
 //////////////////////////////////////////////////////////////////////// ESRI Map
   const mapObj = L.map("map", {
@@ -126,7 +120,6 @@ const app = (() => {
       layers: [0],
       from: startDateTime,
       to: endDateTime,
-      // layerDefs: {0: "rivercountry='Kenya'"},
     })
     .addTo(mapObj)
   L
@@ -146,10 +139,6 @@ const app = (() => {
       mapObj.fire('zoomend')
       return
     }
-    mapObj.panTo(event.latlng)
-    mapObj.fire('zoomend')
-    mapObj.fire('moveend')
-
     if (mapMarker) mapObj.removeLayer(mapMarker)
     mapMarker = L.marker(event.latlng).addTo(mapObj)
 
@@ -169,7 +158,7 @@ const app = (() => {
           return
         }
         selectedSegment.clearLayers()
-        REACHID = featureCollection.features[0].properties["TDX Hydro Link Number"]
+        REACHID = featureCollection?.features[0]?.properties["TDX Hydro Link Number"]
         if (REACHID === "Null") {
           updateStatusIcons({reachid: "fail"})
           alert("Error finding the reach_id")
