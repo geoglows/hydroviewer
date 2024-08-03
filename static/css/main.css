@@ -1,24 +1,52 @@
 html, body {
-    height: 100%;
-    width: 100%;
+    height: 100vh;
+    width: 100vw;
     margin: 0;
     padding: 0;
     border: 0;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    top: 0;
+    left: 0;
+    position: absolute;
+}
+
+.body-wrapper {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.nav-bar-wrapper {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 10px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    height: 75px;
+    flex-grow: 1;
 }
 
 .map {
-    height: 80%;
     cursor: pointer;
+    width: 100%;
+    flex-grow: 1;
+    min-height: 80%;
+    height: calc(100% - 75px);
 }
 
 .controls-wrapper {
     height: auto;
-    margin: 10px;
+    margin: auto;
+    width: 100%;
+    max-width: 500px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    flex-grow: 1;
 }
 
 .time-slider-wrapper {
@@ -55,6 +83,7 @@ html, body {
     display: flex;
     flex-direction: row;
     justify-content: space-around;
+    margin: 20px;
 }
 
 .status-load {
@@ -75,7 +104,8 @@ html, body {
 }
 
 .chart {
-    height: min(4in, 550px)
+    height: max(4in, 500px);
+    text-align: center;
 }
 
 .controls-box {
@@ -86,156 +116,14 @@ html, body {
     margin: 10px 0;
 }
 
-/*!* MAP STYLES *!*/
+.button-group {
+    display: flex;
+    flex-direction: column;
+}
+button {
+    margin: 5px;
+}
 
-
-/*.modal-title {*/
-/*    display: flex;*/
-/*    justify-content: space-around;*/
-/*}*/
-
-/*.btn-close {*/
-/*    margin: 0 !important;*/
-/*    padding: 0;*/
-/*    flex-grow: 0;*/
-/*}*/
-
-/*.row {*/
-/*    width: 100%;*/
-/*}*/
-
-/*#app-content-wrapper #app-content {*/
-/*    height: 100%;*/
-/*}*/
-
-/*#inner-app-content {*/
-/*    padding: 0;*/
-/*    height: 100%;*/
-/*}*/
-
-/*#chart_modal .modal-dialog {*/
-/*    width: 85%*/
-/*}*/
-
-/*#app-navigation li {*/
-/*    list-style-type: none;*/
-/*}*/
-
-/*#inner-app-content .intro_message {*/
-/*    margin-bottom: 0;*/
-/*}*/
-
-/*.map {*/
-/*    height: 100%;*/
-/*    cursor: pointer;*/
-/*}*/
-
-/*.map:-moz-full-screen {*/
-/*    width: 100%;*/
-/*}*/
-
-/*.map:-webkit-full-screen {*/
-/*    width: 100%;*/
-/*}*/
-
-/*.map:-ms-fullscreen {*/
-/*    width: 100%;*/
-/*}*/
-
-/*.map:fullscreen {*/
-/*    width: 100%;*/
-/*}*/
-
-/*.long-term-select {*/
-/*    width: 100%;*/
-/*}*/
-
-/*.select-label {*/
-/*    padding-left: 10px;*/
-/*}*/
-
-/*@-moz-document url-prefix() {*/
-/*    fieldset {*/
-/*        display: table-cell;*/
-/*    }*/
-/*}*/
-
-/*.collapse-control a:after {*/
-/*    font-family: 'Glyphicons Halflings';*/
-/*    content: "\e114";*/
-/*    float: right;*/
-/*    color: #34495E;*/
-/*}*/
-
-/*.warning-val {*/
-/*    font: 400 12px Arial;*/
-/*    color: #888;*/
-/*    margin: 15px 0;*/
-/*}*/
-
-/*.slider {*/
-/*    -webkit-appearance: none;*/
-/*    width: 100%;*/
-/*    height: 25px;*/
-/*    background: #d3d3d3;*/
-/*    outline: none;*/
-/*    opacity: 0.7;*/
-/*    -webkit-transition: .2s;*/
-/*    transition: opacity .2s;*/
-/*}*/
-
-/*.slider::-webkit-slider-thumb {*/
-/*    -webkit-appearance: none;*/
-/*    appearance: none;*/
-/*    width: 25px;*/
-/*    height: 25px;*/
-/*    background: #4CAF50;*/
-/*    cursor: pointer;*/
-/*}*/
-
-/*.slider::-moz-range-thumb {*/
-/*    width: 25px;*/
-/*    height: 25px;*/
-/*    background: #4CAF50;*/
-/*    cursor: pointer;*/
-/*}*/
-
-/*.mybtn {*/
-/*    color: black;*/
-/*    border-color: black;*/
-/*    margin: 10px;*/
-/*}*/
-
-/*.animatebtn {*/
-/*    color: black;*/
-/*}*/
-
-/*#mouse-position {*/
-/*    margin: 10px;*/
-/*    background-color: white;*/
-/*    padding: 10px 15px;*/
-/*    font-weight: bold;*/
-/*}*/
-
-/*#fcProbTable {*/
-/*    height: auto;*/
-/*    min-height: 300px;*/
-/*    align-items: center;*/
-/*    display: flex;*/
-/*    justify-content: center;*/
-/*}*/
-/*#fcProbTable > table {*/
-/*    width: 80%;*/
-/*    min-width: 750px;*/
-/*    border-collapse: collapse;*/
-/*}*/
-
-/*th {*/
-/*    background-color: lightgrey;*/
-/*    font-weight: bold;*/
-/*}*/
-
-/*th, tr, td {*/
-/*    text-align: center;*/
-/*    padding: 10px;*/
-/*}*/
+.modal.bottom-sheet {
+    max-height: 75%;
+}
