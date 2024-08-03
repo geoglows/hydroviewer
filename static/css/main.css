@@ -106,6 +106,9 @@ html, body {
 .chart {
     height: max(4in, 500px);
     text-align: center;
+    margin: 10px 0;
+    width: 100%;
+    max-width: 850px;
 }
 
 .controls-box {

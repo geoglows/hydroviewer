@@ -34,7 +34,6 @@
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
-<!-- Modal Structure -->
 <div id="settings-modal" class="modal bottom-sheet">
   <div class="modal-content">
     <h4>Settings</h4>
@@ -72,11 +71,9 @@
     </div>
   </div>
 </div>
-
-<!-- Modal Structure -->
 <div id="charts-modal" class="modal bottom-sheet">
-  <div class="modal-content">
-    <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center">
+  <div class="modal-content" style="display: flex; flex-direction: column; align-items: center">
+    <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%">
       <h4 style="margin: 0" class="hide-on-small-only">Streamflow</h4>
       <button class="btn" role="button" onclick="app.setReachID()">Enter River ID</button>
       <input type="date" id="forecast-date-calendar" name="forecast-date-calendar" min="2024-07-01" onkeydown="return false" style="max-width: 150px;">
@@ -95,7 +92,7 @@
 </div>
 
 <div class="body-wrapper">
-  <div class="nav-bar-wrapper">
+  <div class="nav-bar-wrapper" style="background-color: #81d4fa">
     <div>
       <div style="font-size: 2rem">GEOGLOWS</div>
     </div>

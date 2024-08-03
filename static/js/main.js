@@ -27,11 +27,15 @@ const app = (() => {
   const slider = document.getElementById('time-slider')
   const currentDate = document.getElementById("current-map-date")
 
-//////////////////////////////////////////////////////////////////////// Manipulate Default Controls and DOM Elements
+//////////////////////////////////////////////////////////////////////// Set Date Conditions for Data and Maps
   let now = new Date()
   now.setHours(now.getHours() - 12)
   inputForecastDate.max = now.toISOString().split("T")[0]
   inputForecastDate.value = now.toISOString().split("T")[0]
+  now.setHours(now.getHours() - 59 * 24)
+  inputForecastDate.min = now.toISOString().split("T")[0]
+
+//////////////////////////////////////////////////////////////////////// Manipulate Default Controls and DOM Elements
   let loadingStatus = {reachid: "clear", forecast: "clear", retro: "clear"}
   let REACHID
   const MIN_QUERY_ZOOM = 12
@@ -48,10 +52,7 @@ const app = (() => {
   })
   let selectedSegment = L.geoJSON(false, {weight: 5, color: "#00008b"}).addTo(m)
   const basemapsJson = {
-    "ESRI Grey": L.layerGroup([
-      L.esri.basemapLayer("Gray"),
-      L.esri.basemapLayer("TerrainLabels")
-    ]).addTo(m),
+    "ESRI Grey": L.esri.basemapLayer("Topographic").addTo(m),
   }
 
 //////////////////////////////////////////////////////////////////////// ADD LEGEND LAT LON BOX
@@ -247,7 +248,7 @@ const app = (() => {
       .then(response => {
         chartForecast.innerHTML = ``
         Plotly.newPlot(
-          'forecastPlot',
+          chartForecast,
           [
             {
               x: response.datetime,
@@ -285,9 +286,9 @@ const app = (() => {
     )
       .then(response => response.json())
       .then(response => {
-        chartRetro.innerHTML = `<img alt="loading signal" src=${LOADING_GIF}>`
+        chartRetro.innerHTML = ``
         Plotly.newPlot(
-          'retroPlot',
+          chartRetro,
           [
             {
               x: response.datetime,
