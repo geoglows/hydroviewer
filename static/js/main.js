@@ -28,8 +28,6 @@ const app = (() => {
   const currentDate = document.getElementById("current-map-date")
 
 //////////////////////////////////////////////////////////////////////// Manipulate Default Controls and DOM Elements
-//   inputForecastDate.max = new Date().toISOString().split("T")[0]
-//   inputForecastDate.value = new Date().toISOString().split("T")[0]
   let now = new Date()
   now.setHours(now.getHours() - 12)
   inputForecastDate.max = now.toISOString().split("T")[0]
@@ -73,10 +71,10 @@ const app = (() => {
   legend.onAdd = () => {
     let div = L.DomUtil.create("div", "legend")
     const legendEntries = [
-      ["purple", "20+ yr Return Period Flow"],
-      ["red", "10+ yr Return Period Flow"],
-      ["gold", "2+ yr Return Period Flow"],
-      ["blue", "Stream Line"]
+      ["purple", "20+ year Flow"],
+      ["red", "10+ year Flow"],
+      ["gold", "2+ yearFlow"],
+      ["blue", "Streams"]
     ]
     const polyLineSVG = (color, label) => `<div><svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polyline points="19 1, 1 6, 19 14, 1 19" stroke="${color}" fill="transparent" stroke-width="2"/></svg>${label}</div>`
     div.innerHTML = '<div class="legend">' + legendEntries.map(entry => polyLineSVG(...entry)).join("") + "</div>"
@@ -236,16 +234,6 @@ const app = (() => {
   }
 
 ////////////////////////////////////////////////////////////////////////  GET DATA FROM API AND MANAGING PLOTS
-  const chartDivs = [
-    chartForecast,
-    // document.getElementById("fcEnsPlot"),
-    // document.getElementById("fcProbTable"),
-    chartRetro,
-    // document.getElementById("dayAvgPlot"),
-    // document.getElementById("annAvgPlot"),
-    // document.getElementById("fdcPlot")
-  ]
-
   const getForecastData = reachID => {
     REACHID = reachID ? reachID : REACHID
     if (!REACHID) return
@@ -291,8 +279,6 @@ const app = (() => {
     if (!REACHID) return
     updateStatusIcons({retro: "load"})
     updateDownloadLinks("clear")
-    let tl = document.getElementById("historical_tab_link")  // select divs with jquery so we can reuse them
-    chartDivs.slice(3).forEach(div => div.innerHTML = "")  // clear the historical data divs
     chartRetro.innerHTML = `<img alt="loading signal" src=${LOADING_GIF}>`
     fetch(
       `${REST_ENDPOINT}/retrospective/${REACHID}/?format=json`
@@ -348,33 +334,17 @@ const app = (() => {
     document.getElementById("request-status").innerHTML = statusDivs
   }
 
-  const fixChartSizes = tab => {
-    const divsToFix = tab === "forecast" ? chartDivs.slice(0, 3) : chartDivs.slice(3)
-    divsToFix.forEach(div => {
-      try {
-        Plotly.Plots.resize(div[0])
-      } catch (e) {
-      }
-    })
-  }
-
   const clearChartDivs = (chartTypes) => {
-    let divsToClear
-    if (chartTypes === "forecast") {
-      divsToClear = chartDivs.slice(0, 3)
-    } else if (chartTypes === "retrospective") {
-      divsToClear = chartDivs.slice(3)
-    } else {
-      divsToClear = chartDivs
+    if (chartTypes === "forecast" || chartTypes === null) {
+      chartForecast.innerHTML = ""
     }
-    divsToClear.forEach(div => {
-      div.innerHTML = ""
-    })
+    if (chartTypes === "retrospective" || chartTypes === null) {
+      chartRetro.innerHTML = ""
+    }
   }
   //////////////////////////////////////////////////////////////////////// Event Listeners
   inputForecastDate.addEventListener("change", () => getForecastData())
   checkboxUseLocalTime.addEventListener("change", () => currentDate.innerHTML = getDateAsString(layerAnimationTime))
-
 
   const giveForecastRetryButton = reachid => {
     clearChartDivs({chartTypes: "forecast"})
@@ -389,7 +359,6 @@ const app = (() => {
     if (mapMarker) m.removeLayer(mapMarker)
   }
   return {
-    fixChartSizes,
     findLatLon,
     clearMarkers,
     getForecastData,
