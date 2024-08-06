@@ -178,14 +178,14 @@ const app = (() => {
           .run((error, featureCollection) => {
             if (error) {
               updateStatusIcons({reachid: "fail"})
-              M.toast({html: "Error finding the River Number. Please try again.", classes: "red"})
+              M.toast({html: "Error querying river number. Please try again.", classes: "red"})
               console.error(error)
               return
             }
             REACHID = featureCollection?.features[0]?.properties["TDX Hydro Link Number"]
             if (REACHID === "Null" || !REACHID || !featureCollection.features[0].geometry) {
               updateStatusIcons({reachid: "fail"})
-              M.toast({html: "Error finding the River Number. Please try again.", classes: "red"})
+              M.toast({html: "River not found. Try to zoom in and be precise when clicking the stream.", classes: "red"})
               console.error(error)
               return
             }
