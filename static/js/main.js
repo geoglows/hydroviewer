@@ -51,7 +51,9 @@ const app = (() => {
   })
   let selectedSegment = L.geoJSON(false, {weight: 5, color: "#00008b"}).addTo(m)
   const basemapsJson = {
-    "ESRI Grey": L.esri.basemapLayer("Topographic").addTo(m),
+    "ESRI Topographic": L.esri.basemapLayer("Topographic").addTo(m),
+    "ESRI Grey": L.layerGroup([L.esri.basemapLayer("Gray"), L.esri.basemapLayer("GrayLabels")]),
+    "ESRI Terrain": L.layerGroup([L.esri.basemapLayer("Terrain"), L.esri.basemapLayer("TerrainLabels")]),
   }
   m.createPane("watershedlayers")
   m.getPane("watershedlayers").style.zIndex = 250
@@ -178,14 +180,14 @@ const app = (() => {
           .run((error, featureCollection) => {
             if (error) {
               updateStatusIcons({reachid: "fail"})
-              M.toast({html: "Error querying river number. Please try again.", classes: "red"})
+              M.toast({html: "Error querying river number. Please try again.", classes: "red", displayDuration: 5000})
               console.error(error)
               return
             }
             REACHID = featureCollection?.features[0]?.properties["TDX Hydro Link Number"]
             if (REACHID === "Null" || !REACHID || !featureCollection.features[0].geometry) {
               updateStatusIcons({reachid: "fail"})
-              M.toast({html: "River not found. Try to zoom in and be precise when clicking the stream.", classes: "red"})
+              M.toast({html: "River not found. Try to zoom in and be precise when clicking the stream.", classes: "red", displayDuration: 5000})
               console.error(error)
               return
             }
@@ -222,21 +224,6 @@ const app = (() => {
     fetchData(parseInt(REACHID))
   }
 
-  const findLatLon = () => {
-    let ll = prompt(
-      "Enter a latitude and longitude coordinate pair separated by a comma. For example, to get to Provo, Utah you would enter: 40.25, -111.65",
-      "40.25, -111.65"
-    )
-    ll = ll
-      .replace(" ", "")
-      .replace("(", "")
-      .replace(")", "")
-      .split(",")
-    if (mapMarker) m.removeLayer(mapMarker)
-    mapMarker = L.marker(L.latLng(ll[0], ll[1])).addTo(m)
-    m.flyTo(L.latLng(ll[0], ll[1]), MIN_QUERY_ZOOM)
-  }
-
   //////////////////////////////////////////////////////////////////////// UPDATE DOWNLOAD LINKS FUNCTION
   const updateDownloadLinks = type => {
     if (type === "clear") {
@@ -264,21 +251,39 @@ const app = (() => {
           chartForecast,
           [
             {
-              x: response.datetime,
-              y: response.flow_median,
-              name: 'median'
+              x: response.datetime.concat(response.datetime.slice().toReversed()),
+              y: response.flow_uncertainty_lower.concat(response.flow_uncertainty_upper.slice().toReversed()),
+              name: 'Uncertainty Interval',
+              fill: 'toself',
+              fillcolor: 'rgba(44,182,255,0.6)',
+              line: {color: 'rgba(0,0,0,0)'}
             },
             {
               x: response.datetime,
               y: response.flow_uncertainty_lower,
-              name: 'lower'
+              name: 'Uncertainty Lower',
+              line: {color: 'rgb(0,166,255)'},
+              showlegend: false,
             },
             {
               x: response.datetime,
               y: response.flow_uncertainty_upper,
-              name: 'upper'
-            }
-          ]
+              name: 'Uncertainty Upper',
+              line: {color: 'rgb(0,166,255)'},
+              showlegend: false,
+            },
+            {
+              x: response.datetime,
+              y: response.flow_median,
+              name: 'Predicted Flow',
+              line: {color: 'black'}
+            },
+          ],
+          {
+            title: `River Forecast for ${REACHID}`,
+            xaxis: {title: "Date (UTC +00:00)"},
+            yaxis: {title: "Discharge (m³/s)"},
+          }
         )
         updateDownloadLinks("set")
         updateStatusIcons({forecast: "ready"})

@@ -104,11 +104,12 @@ html, body {
 }
 
 .chart {
-    height: max(4in, 500px);
+    height: fit-content;
     text-align: center;
     margin: 10px 0;
     width: 100%;
-    max-width: 850px;
+    max-width: 1200px;
+    max-height: max(5in, 500px);
 }
 
 .controls-box {
