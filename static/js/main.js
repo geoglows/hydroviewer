@@ -1,16 +1,12 @@
 const app = (() => {
   'use strict'
 
-//////////////////////////////////////////////////////////////////////// State Variables
-  ////// URLS FROM TEMPLATE RENDER
+  //////////////////////////////////////////////////////////////////////// State Variables
   const REST_ENDPOINT = 'https://geoglows.ecmwf.int/api/v2'
   const ESRI_LAYER_URL = 'https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer'
   const LOADING_GIF = 'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif'
 
-//////////////////////////////////////////////////////////////////////// Materialize Initialization
-  M.AutoInit()
-
-//////////////////////////////////////////////////////////////////////// Element Selectors
+  //////////////////////////////////////////////////////////////////////// Element Selectors
   const checkboxLoadForecast = document.getElementById('auto-load-forecasts')
   const checkboxLoadRetro = document.getElementById('auto-load-retrospective')
   const checkboxUseLocalTime = document.getElementById('use-local-time')
@@ -27,7 +23,10 @@ const app = (() => {
   const slider = document.getElementById('time-slider')
   const currentDate = document.getElementById("current-map-date")
 
-//////////////////////////////////////////////////////////////////////// Set Date Conditions for Data and Maps
+  //////////////////////////////////////////////////////////////////////// Materialize Initialization
+  M.AutoInit()
+
+  //////////////////////////////////////////////////////////////////////// Set Date Conditions for Data and Maps
   let now = new Date()
   now.setHours(now.getHours() - 12)
   inputForecastDate.max = now.toISOString().split("T")[0]
@@ -35,13 +34,13 @@ const app = (() => {
   now.setHours(now.getHours() - 59 * 24)
   inputForecastDate.min = now.toISOString().split("T")[0]
 
-//////////////////////////////////////////////////////////////////////// Manipulate Default Controls and DOM Elements
+  //////////////////////////////////////////////////////////////////////// Manipulate Default Controls and DOM Elements
   let loadingStatus = {reachid: "clear", forecast: "clear", retro: "clear"}
   let REACHID
   const MIN_QUERY_ZOOM = 12
   let mapMarker = null
 
-//////////////////////////////////////////////////////////////////////// ESRI Map
+  //////////////////////////////////////////////////////////////////////// Leaflet Map
   const m = L.map("map", {
     zoom: 3,
     minZoom: 2,
@@ -54,8 +53,10 @@ const app = (() => {
   const basemapsJson = {
     "ESRI Grey": L.esri.basemapLayer("Topographic").addTo(m),
   }
+  m.createPane("watershedlayers")
+  m.getPane("watershedlayers").style.zIndex = 250
 
-//////////////////////////////////////////////////////////////////////// ADD LEGEND LAT LON BOX
+  //////////////////////////////////////////////////////////////////////// Add legend and lat/lon box
   let latlon = L.control({position: "bottomleft"})
   latlon.onAdd = () => {
     let div = L.DomUtil.create("div")
@@ -64,10 +65,6 @@ const app = (() => {
   }
   latlon.addTo(m)
   m.on("mousemove", event => document.getElementById("mouse-position").innerHTML = `Lat: ${event.latlng.lat.toFixed(3)}, Lon: ${event.latlng.lng.toFixed(3)}`)
-////////////////////////////////////////////////////////////////////////  LEGENDS AND LAYER GROUPS
-  m.createPane("watershedlayers")
-  m.getPane("watershedlayers").style.zIndex = 250
-  // add the legends box to the map
   let legend = L.control({position: "bottomright"})
   legend.onAdd = () => {
     let div = L.DomUtil.create("div", "legend")
@@ -82,7 +79,8 @@ const app = (() => {
     return div
   }
   legend.addTo(m)
-////////////////////////////////////////////////////////////////////////  ESRI LAYER ANIMATION CONTROLS
+
+  ////////////////////////////////////////////////////////////////////////  Animation Controls
   const getDateAsString = date => {
     if (checkboxUseLocalTime.checked) return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0") + " " + String(date.getHours()).padStart(2, "0") + ":00:00" + " Local Time"
     return currentDate.innerHTML = layerAnimationTime.toISOString().replaceAll("T", " ").replace("Z", "").replace(".000", "") + " UTC"
@@ -130,7 +128,7 @@ const app = (() => {
   })
   slider.addEventListener("change", _ => refreshLayerAnimation())
 
-////////////////////////////////////////////////////////////////////////  ADD WMS LAYERS FOR DRAINAGE LINES, ETC - SEE HOME.HTML TEMPLATE
+  ////////////////////////////////////////////////////////////////////////  ADD WMS LAYERS FOR DRAINAGE LINES, ETC - SEE HOME.HTML TEMPLATE
   const esriStreamLayer = L
     .esri
     .dynamicMapLayer({
@@ -141,6 +139,10 @@ const app = (() => {
       to: endDateTime,
     })
     .addTo(m)
+  let layerLoaded = false
+  esriStreamLayer.on("load", () => layerLoaded = true)
+  esriStreamLayer.on("loading", () => layerLoaded = false)
+
   L
     .control
     .layers(
@@ -152,44 +154,57 @@ const app = (() => {
     )
     .addTo(m)
 
-  m.on("click", event => {
-    if (m.getZoom() < MIN_QUERY_ZOOM) {
-      m.flyTo(event.latlng, MIN_QUERY_ZOOM, {duration: 1.5})
-      m.fire('zoomend')
-      return
-    }
-    if (mapMarker) m.removeLayer(mapMarker)
-    mapMarker = L.marker(event.latlng).addTo(m)
+  m
+    .on("click", event => {
+      if (m.getZoom() < MIN_QUERY_ZOOM) {
+        m.flyTo(event.latlng, MIN_QUERY_ZOOM, {duration: 1.5})
+        m.fire('zoomend')
+        return
+      }
+      m.flyTo(event.latlng, m.getZoom(), {duration: 0.25})
+      if (mapMarker) m.removeLayer(mapMarker)
+      mapMarker = L.marker(event.latlng).addTo(m)
 
-    updateStatusIcons({reachid: "load", forecast: "clear", retro: "clear"})
+      updateStatusIcons({reachid: "load", forecast: "clear", retro: "clear"})
 
-    L
-      .esri
-      .identifyFeatures({url: ESRI_LAYER_URL})
-      .on(m)
-      .at([event.latlng["lat"], event.latlng["lng"]])
-      .tolerance(20) // map pixels to buffer search point
-      .precision(5) // decimals in the returned coordinate pairs
-      .run((error, featureCollection) => {
-        if (error) {
-          updateStatusIcons({reachid: "fail"})
-          // send a toast that the reach_id was not found
-          M.toast({html: "Error finding the River Number. Please try again.", classes: "red"})
-          return
-        }
-        REACHID = featureCollection?.features[0]?.properties["TDX Hydro Link Number"]
-        if (REACHID === "Null" || !REACHID || !featureCollection.features[0].geometry) {
-          updateStatusIcons({reachid: "fail"})
-          M.toast({html: "Error finding the River Number. Please try again.", classes: "red"})
-          return
-        }
-        selectedSegment.clearLayers()
-        selectedSegment.addData(featureCollection.features[0].geometry)
-        fetchData(REACHID)
-      })
-  })
+      const queryLayerForID = () => {
+        L
+          .esri
+          .identifyFeatures({url: ESRI_LAYER_URL})
+          .on(m)
+          .at(event.latlng)
+          .tolerance(25) // map pixels to buffer search point
+          .precision(5) // decimals in the returned coordinate pairs
+          .run((error, featureCollection) => {
+            if (error) {
+              updateStatusIcons({reachid: "fail"})
+              M.toast({html: "Error finding the River Number. Please try again.", classes: "red"})
+              console.error(error)
+              return
+            }
+            REACHID = featureCollection?.features[0]?.properties["TDX Hydro Link Number"]
+            if (REACHID === "Null" || !REACHID || !featureCollection.features[0].geometry) {
+              updateStatusIcons({reachid: "fail"})
+              M.toast({html: "Error finding the River Number. Please try again.", classes: "red"})
+              console.error(error)
+              return
+            }
+            selectedSegment.clearLayers()
+            selectedSegment.addData(featureCollection.features[0].geometry)
+            fetchData(REACHID)
+          })
+      }
+      // check if the layer esriStreamLayer is loaded
+      if (layerLoaded) {
+        M.toast({html: "Identifying river segment. Charts will load soon.", classes: "orange"})
+        queryLayerForID()  // if it is, run the identifyFeatures function
+      } else {
+        M.toast({html: "The map is still loading streams. Charts will load soon.", classes: "orange"})
+        esriStreamLayer.once("load", () => queryLayerForID())  // if not trigger it with a "once" (runs one time, not wait until) event listener
+      }
+    })
 
-//////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
+  //////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
   const fetchData = reachid => {
     REACHID = reachid ? reachid : REACHID
     if (!REACHID) return updateStatusIcons({reachid: "fail"})
@@ -203,8 +218,7 @@ const app = (() => {
   const setReachID = () => {
     REACHID = prompt("Please enter a 9 digit River ID to search for.")
     if (!REACHID) return
-    // check that it is a 9 digit number
-    if (!/^\d{9}$/.test(REACHID)) return alert("River ID numbers should be 9 digit numbers")
+    if (!/^\d{9}$/.test(REACHID)) return alert("River ID numbers should be 9 digit numbers") // check that it is a 9 digit number
     fetchData(parseInt(REACHID))
   }
 
@@ -223,7 +237,7 @@ const app = (() => {
     m.flyTo(L.latLng(ll[0], ll[1]), MIN_QUERY_ZOOM)
   }
 
-//////////////////////////////////////////////////////////////////////// UPDATE DOWNLOAD LINKS FUNCTION
+  //////////////////////////////////////////////////////////////////////// UPDATE DOWNLOAD LINKS FUNCTION
   const updateDownloadLinks = type => {
     if (type === "clear") {
       document.getElementById("download-forecast-btn").href = ""
@@ -234,11 +248,10 @@ const app = (() => {
     }
   }
 
-////////////////////////////////////////////////////////////////////////  GET DATA FROM API AND MANAGING PLOTS
+  ////////////////////////////////////////////////////////////////////////  GET DATA FROM API AND MANAGING PLOTS
   const getForecastData = reachID => {
     REACHID = reachID ? reachID : REACHID
     if (!REACHID) return
-    let ftl = document.getElementById("forecast_tab_link") // select divs with jquery so we can reuse them
     chartForecast.innerHTML = `<img alt="loading signal" src=${LOADING_GIF}>`
     updateStatusIcons({forecast: "load"})
     fetch(
@@ -305,7 +318,7 @@ const app = (() => {
       })
   }
 
-//////////////////////////////////////////////////////////////////////// UPDATE STATUS ICONS FUNCTION
+  //////////////////////////////////////////////////////////////////////// UPDATE STATUS ICONS FUNCTION
   const updateStatusIcons = status => {
     for (let key in status) {
       loadingStatus[key] = status[key]
@@ -343,6 +356,7 @@ const app = (() => {
       chartRetro.innerHTML = ""
     }
   }
+
   //////////////////////////////////////////////////////////////////////// Event Listeners
   inputForecastDate.addEventListener("change", () => getForecastData())
   checkboxUseLocalTime.addEventListener("change", () => currentDate.innerHTML = getDateAsString(layerAnimationTime))
@@ -360,7 +374,6 @@ const app = (() => {
     if (mapMarker) m.removeLayer(mapMarker)
   }
   return {
-    findLatLon,
     clearMarkers,
     getForecastData,
     getRetrospectiveData,
