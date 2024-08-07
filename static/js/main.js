@@ -230,8 +230,8 @@ const app = (() => {
       document.getElementById("download-forecast-btn").href = ""
       document.getElementById("download-historical-btn").href = ""
     } else if (type === "set") {
-      document.getElementById("download-forecast-btn").href = `${REST_ENDPOINT}forecast/${REACHID}`
-      document.getElementById("download-historical-btn").href = `${REST_ENDPOINT}retrospective/${REACHID}`
+      document.getElementById("download-forecast-btn").href = `${REST_ENDPOINT}/forecast/${REACHID}`
+      document.getElementById("download-historical-btn").href = `${REST_ENDPOINT}/retrospective/${REACHID}`
     }
   }
 
@@ -299,6 +299,7 @@ const app = (() => {
     updateStatusIcons({retro: "load"})
     updateDownloadLinks("clear")
     chartRetro.innerHTML = `<img alt="loading signal" src=${LOADING_GIF}>`
+    const defaultDateRange = ['2015-01-01', new Date().toISOString().split("T")[0]]
     fetch(
       `${REST_ENDPOINT}/retrospective/${REACHID}/?format=json`
     )
@@ -312,7 +313,41 @@ const app = (() => {
               x: response.datetime,
               y: response[REACHID],
             }
-          ]
+          ],
+          {
+            title: `Simulated River Flow for ${REACHID}`,
+            yaxis: {title: "Discharge (m³/s)"},
+            xaxis: {
+              title: "Date (UTC +00:00)",
+              autorange: false,
+              range: defaultDateRange,
+              rangeslider: {},
+              rangeselector: {
+                buttons: [
+                  {
+                    count: 1,
+                    label: '1 year',
+                    step: 'year',
+                    stepmode: 'backward'
+                  },
+                  {
+                    count: 5,
+                    label: '5 years',
+                    step: 'year',
+                    stepmode: 'backward'
+                  },
+                  {
+                    count: 10,
+                    label: '10 years',
+                    step: 'year',
+                    stepmode: 'backward'
+                  },
+                  {step: 'All'}
+                ]
+              },
+              type: 'date'
+            }
+          }
         )
         updateDownloadLinks("set")
         updateStatusIcons({retro: "ready"})
@@ -368,7 +403,7 @@ const app = (() => {
 
   const giveForecastRetryButton = reachid => {
     clearChartDivs({chartTypes: "forecast"})
-    chartForecast.innerHTML = `<button class="btn btn-warning" onclick="app.getForecastData(${reachid})">Retry Retrieve Forecast</button>`
+    chartForecast.innerHTML = `<button class="btn btn-warning" onclick="app.getForecastData(${reachid})">Retrieve Forecast Data</button>`
   }
   const giveRetrospectiveRetryButton = reachid => {
     clearChartDivs({chartTypes: "historical"})
