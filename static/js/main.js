@@ -366,7 +366,7 @@ const app = (() => {
     for (let key in status) {
       loadingStatus[key] = status[key]
     }
-    let statusDivs = [
+    document.getElementById("request-status").innerHTML = [
       ['reachid', 'River ID'],
       ['forecast', 'Forecast'],
       ['retro', 'Retrospective']
@@ -387,8 +387,6 @@ const app = (() => {
       }
       return `<span class="status-${loadingStatus[key[0]]}">${key[1]}: ${message}</span>`
     }).join(' - ')
-
-    document.getElementById("request-status").innerHTML = statusDivs
   }
 
   const clearChartDivs = (chartTypes) => {
@@ -413,11 +411,7 @@ const app = (() => {
     chartRetro.innerHTML = `<button class="btn btn-warning" onclick="app.getRetrospectiveData(${reachid})">Retrieve Retrospective Data</button>`
   }
 
-  const clearMarkers = () => {
-    if (mapMarker) m.removeLayer(mapMarker)
-  }
   return {
-    clearMarkers,
     getForecastData,
     getRetrospectiveData,
     setReachID,
