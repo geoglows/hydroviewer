@@ -22,7 +22,7 @@ html, body {
     justify-content: space-between;
     flex-direction: row;
     align-items: center;
-    padding: 0 10px;
+    padding: 0 25px;
     background-color: #f8f9fa;
     border-bottom: 1px solid #e9ecef;
     height: 75px;
@@ -124,10 +124,32 @@ html, body {
     display: flex;
     flex-direction: column;
 }
+
 button {
     margin: 5px;
 }
 
 .modal.bottom-sheet {
     max-height: 75%;
+}
+
+.download-buttons {
+    justify-content: space-between;
+}
+
+.download-buttons > * {
+    margin: 5px;
+}
+
+/* on mobile screens, change the download-buttons class */
+@media (max-width: 600px) {
+    .download-buttons {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .modal .modal-content {
+        padding: 10px;
+    }
 }

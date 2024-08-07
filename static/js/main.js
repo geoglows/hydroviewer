@@ -253,7 +253,7 @@ const app = (() => {
             {
               x: response.datetime.concat(response.datetime.slice().toReversed()),
               y: response.flow_uncertainty_lower.concat(response.flow_uncertainty_upper.slice().toReversed()),
-              name: 'Uncertainty Interval',
+              name: 'Uncertainty',
               fill: 'toself',
               fillcolor: 'rgba(44,182,255,0.6)',
               line: {color: 'rgba(0,0,0,0)'}
@@ -342,7 +342,10 @@ const app = (() => {
                     step: 'year',
                     stepmode: 'backward'
                   },
-                  {step: 'All'}
+                  {
+                    label: 'All',
+                    step: 'All',
+                  }
                 ]
               },
               type: 'date'
