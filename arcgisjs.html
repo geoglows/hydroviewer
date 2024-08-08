@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>River Forecast System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="GEOGLOWS Hydroviwer">
+  <meta name="author" content="Riley Hales PhD">
+  <meta name="keywords" content="RFS, River Forecast System, Hydrology, Streamflow, Global, GEOGLOWS, Hydroviewer, Streamflow, Forecast, Retrospective">
+  <meta name="robots" content="index, follow">
+
+  <!-- Framework -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+  <link
+    rel="stylesheet"
+    href="https://js.arcgis.com/4.30/esri/themes/light/main.css"/>
+  <script src="https://js.arcgis.com/4.30/"></script>
+
+  <link
+    rel="stylesheet"
+    href="static/css/main.css"/>
+  <script src="static/js/arcgis.js" defer></script>
+
+</head>
+<body>
+<div id="settings-modal" class="modal bottom-sheet">
+  <div class="modal-content">
+    <h4>Settings</h4>
+    <div class="controls-wrapper">
+      <div class="time-slider-wrapper">
+        <label class="control-label" for="time-slider">Map Animation</label>
+        <input type="range" min="0" max="80" value="0" class="time-slider" id="time-slider">
+      </div>
+      <div id="current-map-date" style="text-align: center"></div>
+      <div style="text-align: center;">
+        <button class="btn" id="animationBack1"><i class="material-icons">chevron_left</i></button>
+        <button class="btn btn-primary" id="animationPlay"><i class="material-icons">play_arrow</i></button>
+        <button class="btn btn-warning" id="animationStop"><i class="material-icons">stop</i></button>
+        <button class="btn" id="animationPlus1"><i class="material-icons">chevron_right</i></button>
+      </div>
+      <div class="button-group">
+        <button class="btn" role="button" onclick="app.findLatLon()">Zoom to Lat/Lon</button>
+        <button class="btn margin" role="button" onclick="app.clearMarkers()">Remove Map Marker</button>
+        <label>
+          <input id="auto-load-forecasts" type="checkbox" checked="checked"/>
+          <span>Retrieve Forecast</span>
+        </label>
+        <label>
+          <input id="auto-load-retrospective" type="checkbox"/>
+          <span>Retrieve Retrospective</span>
+        </label>
+        <label>
+          <input id="use-local-time" type="checkbox"/>
+          <span>Use Local Time</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <a class="modal-close waves-effect waves-green btn-flat">Close</a>
+    </div>
+  </div>
+</div>
+<div id="charts-modal" class="modal bottom-sheet">
+  <div class="modal-content" style="display: flex; flex-direction: column; align-items: center">
+    <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%">
+      <h4 style="margin: 0" class="hide-on-small-only">Streamflow<span id="river-name"></span></h4>
+      <button class="btn" role="button" onclick="app.setReachID()">Enter River ID</button>
+      <input type="date" id="forecast-date-calendar" name="forecast-date-calendar" min="2024-07-01" onkeydown="return false" style="max-width: 150px;">
+    </div>
+    <div id="request-status" class="load-status"></div>
+    <div id="forecastPlot" class="chart"><h4>Enter a river number or use the map to click on a stream to view river data</h4></div>
+    <div id="retroPlot" class="chart"></div>
+    <div class="download-buttons">
+      <a class="btn btn-success" role="button" id="download-forecast-btn" target="_blank">Download Forecast</a>
+      <a class="btn btn-success" role="button" id="download-historical-btn" target="_blank">Download Retrospective</a>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a class="modal-close waves-effect waves-green btn-flat">Close</a>
+  </div>
+</div>
+
+<div class="body-wrapper">
+  <div class="nav-bar-wrapper" style="background-color: #81d4fa">
+    <div>
+      <div style="font-size: 2rem; font-weight: bolder">GEOGLOWS</div>
+    </div>
+    <div>
+      <a class="waves-effect waves-light btn modal-trigger" href="#charts-modal"><i class="material-icons">show_chart</i></a>
+      <a class="waves-effect waves-light btn modal-trigger" href="#settings-modal"><i class="material-icons">settings</i></a>
+    </div>
+  </div>
+  <div id="map" class="map"></div>
+</div>
+</body>
+</html>

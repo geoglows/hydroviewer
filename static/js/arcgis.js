@@ -1,10 +1,22 @@
-const app = (() => {
+const app = require([
+  "esri/Map",
+  "esri/views/MapView",
+  "esri/layers/MapImageLayer",
+  "esri/layers/FeatureLayer",
+], (Map, MapView, MapImageLayer, FeatureLayer) => {
   'use strict'
-
   //////////////////////////////////////////////////////////////////////// State Variables
   const REST_ENDPOINT = 'https://geoglows.ecmwf.int/api/v2'
   const ESRI_LAYER_URL = 'https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer'
   const LOADING_GIF = 'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif'
+  const OSM_REGIONS_URL = 'https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/OSM_Regions_view/FeatureServer'
+  const OSM_WATERWAYS_NA = 'https://services6.arcgis.com/Do88DoK2xjTUCXd1/arcgis/rest/services/OSM_NA_Waterways/FeatureServer'
+  const OSM_WATERWAYS_CA = 'https://services6.arcgis.com/Do88DoK2xjTUCXd1/arcgis/rest/services/OSM_CA_Waterways/FeatureServer'
+  const OSM_WATERWAYS_SA = 'https://services6.arcgis.com/Do88DoK2xjTUCXd1/arcgis/rest/services/OSM_SA_Waterways/FeatureServer'
+  const OSM_WATERWAYS_EU = 'https://services-eu1.arcgis.com/zci5bUiJ8olAal7N/arcgis/rest/services/OpenStreetMap_Waterways_for_Europe/FeatureServer'
+  const OSM_WATERWAYS_AF = 'https://services-eu1.arcgis.com/zci5bUiJ8olAal7N/arcgis/rest/services/OSM_AF_Waterways/FeatureServer'
+  const OSM_WATERWAYS_AS = 'https://services-ap1.arcgis.com/iA7fZQOnjY9D67Zx/arcgis/rest/services/OSM_AS_Waterways/FeatureServer'
+  const OSM_WATERWAYS_AU = 'https://services-ap1.arcgis.com/iA7fZQOnjY9D67Zx/arcgis/rest/services/OSM_AU_Waterways/FeatureServer'
 
   //////////////////////////////////////////////////////////////////////// Element Selectors
   const checkboxLoadForecast = document.getElementById('auto-load-forecasts')
@@ -38,81 +50,145 @@ const app = (() => {
   let loadingStatus = {reachid: "clear", forecast: "clear", retro: "clear"}
   let REACHID
   const MIN_QUERY_ZOOM = 12
-  let mapMarker = null
 
-  //////////////////////////////////////////////////////////////////////// Leaflet Map
-  const m = L.map("map", {
-    zoom: 3,
-    minZoom: 2,
-    maxZoom: 15,
-    boxZoom: true,
-    maxBounds: L.latLngBounds(L.latLng(-100, -225), L.latLng(100, 225)),
-    center: [20, 0],
-    crs: L.CRS.EPSG3857,
-  })
-  let selectedSegment = L.geoJSON(false, {weight: 5, color: "#00008b"}).addTo(m)
-  const basemapsJson = {
-    "ESRI Topographic": L.esri.basemapLayer("Topographic").addTo(m),
-    "ESRI Grey": L.layerGroup([L.esri.basemapLayer("Gray"), L.esri.basemapLayer("GrayLabels")]),
-    "ESRI Terrain": L.layerGroup([L.esri.basemapLayer("Terrain"), L.esri.basemapLayer("TerrainLabels")]),
-  }
-  m.createPane("watershedlayers")
-  m.getPane("watershedlayers").style.zIndex = 250
-
-  //////////////////////////////////////////////////////////////////////// Add legend and lat/lon box
-  let latlon = L.control({position: "bottomleft"})
-  latlon.onAdd = () => {
-    let div = L.DomUtil.create("div")
-    div.innerHTML = '<div id="mouse-position" class="map-overlay-element"></div>'
-    return div
-  }
-  latlon.addTo(m)
-  m.on("mousemove", event => document.getElementById("mouse-position").innerHTML = `Lat: ${event.latlng.lat.toFixed(3)}, Lon: ${event.latlng.lng.toFixed(3)}`)
-  let legend = L.control({position: "bottomright"})
-  legend.onAdd = () => {
-    let div = L.DomUtil.create("div", "legend")
-    const legendEntries = [
-      ["purple", "20+ year Flow"],
-      ["red", "10+ year Flow"],
-      ["gold", "2+ yearFlow"],
-      ["blue", "Streams"]
+  ////////////////////////////////////////////////////////////////////////  Create Layer, Map, View
+  const layer = new MapImageLayer({
+    url: ESRI_LAYER_URL,
+    sublayers: [
+      {
+        id: 0,
+        visible: true,
+        // definitionExpression: "pop2000 > 100000"
+      }
     ]
-    const polyLineSVG = (color, label) => `<div><svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polyline points="19 1, 1 6, 19 14, 1 19" stroke="${color}" fill="transparent" stroke-width="2"/></svg>${label}</div>`
-    div.innerHTML = '<div class="legend">' + legendEntries.map(entry => polyLineSVG(...entry)).join("") + "</div>"
-    return div
+  })
+  const regionsLayer = new FeatureLayer({url: OSM_REGIONS_URL})
+  // const naWaterwaysLayer = new FeatureLayer({url: OSM_WATERWAYS_NA})
+  // const caWaterwaysLayer = new FeatureLayer({url: OSM_WATERWAYS_CA})
+  // const saWaterwaysLayer = new FeatureLayer({url: OSM_WATERWAYS_SA})
+  // const euWaterwaysLayer = new FeatureLayer({url: OSM_WATERWAYS_EU})
+  // const afWaterwaysLayer = new FeatureLayer({url: OSM_WATERWAYS_AF})
+  // const asWaterwaysLayer = new FeatureLayer({url: OSM_WATERWAYS_AS})
+  // const auWaterwaysLayer = new FeatureLayer({url: OSM_WATERWAYS_AU})
+  const waterwaysLayers = {
+    'north-america': new FeatureLayer({url: OSM_WATERWAYS_NA}),
+    'central-america': new FeatureLayer({url: OSM_WATERWAYS_CA}),
+    'south-america': new FeatureLayer({url: OSM_WATERWAYS_SA}),
+    'europe': new FeatureLayer({url: OSM_WATERWAYS_EU}),
+    'africa': new FeatureLayer({url: OSM_WATERWAYS_AF}),
+    'asia': new FeatureLayer({url: OSM_WATERWAYS_AS}),
+    'australia': new FeatureLayer({url: OSM_WATERWAYS_AU}),
   }
-  legend.addTo(m)
+
+  const map = new Map({
+    basemap: "dark-gray-vector",
+    layers: [layer],
+    spatialReference: {wkid: 102100}
+  })
+  const view = new MapView({
+    container: "map",
+    map: map,
+    zoom: 4,
+    center: [-99, 39]
+  })
+
+  const queryLayerForID = event => {
+    // query the regions with the geometry of the click event and log the response
+    regionsLayer
+      .queryFeatures({
+        geometry: event.mapPoint,
+        spatialRelationship: "intersects",
+        outFields: ["*"],
+      })
+      .then(response => {
+        console.log(response)
+        waterwaysLayers
+          [response.features[0].attributes.Name]
+          .queryFeatures({
+            geometry: event.mapPoint,
+            distance: 125,
+            units: "meters",
+            spatialRelationship: "intersects",
+            outFields: ["*"],
+            returnGeometry: true
+          })
+          .then(response => {
+            console.log(response)
+            // put it in the div for the opened modal
+            const name = response?.features[0]?.attributes?.name || "Unknown Name"
+            document.getElementById("river-name").innerHTML = `: ${name}`
+          })
+      })
+
+    const queryParameters = {
+      geometry: event.mapPoint,
+      distance: 125,
+      units: "meters",
+      spatialRelationship: "intersects",
+      outFields: ["*"],
+      returnGeometry: true
+    }
+    layer
+      .findSublayerById(0)
+      .queryFeatures(queryParameters)
+      .then(response => {
+        console.log(response);
+        if (!response.features.length) {
+          M.toast({html: "No river segment found. Zoom in and be precise when selecting rivers.", classes: "red"})
+          return
+        }
+        REACHID = response.features[0].attributes.comid
+        if (REACHID === "Null" || !REACHID) {
+          updateStatusIcons({reachid: "fail"})
+          M.toast({html: "River not found. Try to zoom in and be precise when clicking the stream.", classes: "red", displayDuration: 5000})
+          console.error(error)
+          return
+        }
+
+        // delete previous graphics then add the new one
+        view.graphics.removeAll()
+        view.graphics.add({
+          geometry: response.features[0].geometry,
+          symbol: {
+            type: "simple-line",
+            color: [0, 0, 255],
+            width: 3
+          }
+        })
+        fetchData(REACHID)
+      })
+  }
 
   ////////////////////////////////////////////////////////////////////////  Animation Controls
   const getDateAsString = date => {
     if (checkboxUseLocalTime.checked) return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0") + " " + String(date.getHours()).padStart(2, "0") + ":00:00" + " Local Time"
-    return currentDate.innerHTML = layerAnimationTime.toISOString().replaceAll("T", " ").replace("Z", "").replace(".000", "") + " UTC"
+    return currentDate.innerHTML = mapTime.toISOString().replaceAll("T", " ").replace("Z", "").replace(".000", "") + " UTC"
   }
-  let layerAnimationTime = new Date()
-  layerAnimationTime = new Date(layerAnimationTime.toISOString())
-  layerAnimationTime.setUTCHours(0)
-  layerAnimationTime.setUTCMinutes(0)
-  layerAnimationTime.setUTCSeconds(0)
-  layerAnimationTime.setUTCMilliseconds(0)
+  let mapTime = new Date()
+  mapTime = new Date(mapTime.toISOString())
+  mapTime.setUTCHours(0)
+  mapTime.setUTCMinutes(0)
+  mapTime.setUTCSeconds(0)
+  mapTime.setUTCMilliseconds(0)
   const animationDays = 10  // 15 days
   const stepsPerDay = 8  // 3 hour steps
   const numAnimateSteps = animationDays * stepsPerDay
-  const startDateTime = new Date(layerAnimationTime)
-  const endDateTime = new Date(layerAnimationTime.setUTCHours(animationDays * 24))
+  const startDateTime = new Date(mapTime)
+  const endDateTime = new Date(mapTime.setUTCHours(animationDays * 24))
   let animate = false
   let animateSpeed = 750
-  layerAnimationTime = new Date(startDateTime)
-  currentDate.innerHTML = getDateAsString(layerAnimationTime)
+  mapTime = new Date(startDateTime)
+  currentDate.innerHTML = getDateAsString(mapTime)
   const refreshLayerAnimation = () => {
-    layerAnimationTime = new Date(startDateTime)
-    layerAnimationTime.setUTCHours(slider.value * 3)
-    currentDate.innerHTML = getDateAsString(layerAnimationTime)
-    esriStreamLayer.setTimeRange(layerAnimationTime, endDateTime)
+    mapTime = new Date(startDateTime)
+    mapTime.setUTCHours(slider.value * 3)
+    currentDate.innerHTML = getDateAsString(mapTime)
+    esriStreamLayer.setTimeRange(mapTime, endDateTime)
   }
   const playAnimation = (once = false) => {
     if (!animate) return
     animate = !once  // toggle animation if play once (once =true, animate = false)
-    layerAnimationTime < endDateTime ? slider.value = Number(slider.value) + 1 : slider.value = 0
+    mapTime < endDateTime ? slider.value = Number(slider.value) + 1 : slider.value = 0
     refreshLayerAnimation()
     setTimeout(playAnimation, animateSpeed)
   }
@@ -126,86 +202,10 @@ const app = (() => {
     playAnimation(true)
   })
   back1Button.addEventListener("click", () => {
-    layerAnimationTime > startDateTime ? slider.value = Number(slider.value) - 1 : slider.value = numAnimateSteps
+    mapTime > startDateTime ? slider.value = Number(slider.value) - 1 : slider.value = numAnimateSteps
     refreshLayerAnimation()
   })
   slider.addEventListener("change", _ => refreshLayerAnimation())
-
-  ////////////////////////////////////////////////////////////////////////  ADD WMS LAYERS FOR DRAINAGE LINES, ETC - SEE HOME.HTML TEMPLATE
-  const esriStreamLayer = L
-    .esri
-    .dynamicMapLayer({
-      url: ESRI_LAYER_URL,
-      useCors: false,
-      layers: [0],
-      from: startDateTime,
-      to: endDateTime,
-    })
-    .addTo(m)
-  let layerLoaded = false
-  esriStreamLayer.on("load", () => layerLoaded = true)
-  esriStreamLayer.on("loading", () => layerLoaded = false)
-
-  L
-    .control
-    .layers(
-      basemapsJson,
-      {
-        "Stream Network": esriStreamLayer,
-      },
-      {collapsed: true}
-    )
-    .addTo(m)
-
-  m
-    .on("click", event => {
-      if (m.getZoom() < MIN_QUERY_ZOOM) {
-        m.flyTo(event.latlng, MIN_QUERY_ZOOM, {duration: 1.5})
-        m.fire('zoomend')
-        return
-      }
-      m.flyTo(event.latlng, m.getZoom(), {duration: 0.25})
-      if (mapMarker) m.removeLayer(mapMarker)
-      mapMarker = L.marker(event.latlng).addTo(m)
-
-      updateStatusIcons({reachid: "load", forecast: "clear", retro: "clear"})
-
-      const queryLayerForID = () => {
-        L
-          .esri
-          .identifyFeatures({url: ESRI_LAYER_URL})
-          .on(m)
-          .at(event.latlng)
-          .tolerance(25) // map pixels to buffer search point
-          .precision(5) // decimals in the returned coordinate pairs
-          .run((error, featureCollection) => {
-            if (error) {
-              updateStatusIcons({reachid: "fail"})
-              M.toast({html: "Error querying river number. Please try again.", classes: "red", displayDuration: 5000})
-              console.error(error)
-              return
-            }
-            REACHID = featureCollection?.features[0]?.properties["TDX Hydro Link Number"]
-            if (REACHID === "Null" || !REACHID || !featureCollection.features[0].geometry) {
-              updateStatusIcons({reachid: "fail"})
-              M.toast({html: "River not found. Try to zoom in and be precise when clicking the stream.", classes: "red", displayDuration: 5000})
-              console.error(error)
-              return
-            }
-            selectedSegment.clearLayers()
-            selectedSegment.addData(featureCollection.features[0].geometry)
-            fetchData(REACHID)
-          })
-      }
-      // check if the layer esriStreamLayer is loaded
-      if (layerLoaded) {
-        M.toast({html: "Identifying river segment. Charts will load soon.", classes: "orange"})
-        queryLayerForID()  // if it is, run the identifyFeatures function
-      } else {
-        M.toast({html: "The map is still loading streams. Charts will load soon.", classes: "orange"})
-        esriStreamLayer.once("load", () => queryLayerForID())  // if not trigger it with a "once" (runs one time, not wait until) event listener
-      }
-    })
 
   //////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
   const fetchData = reachid => {
@@ -225,7 +225,7 @@ const app = (() => {
     fetchData(parseInt(REACHID))
   }
 
-  //////////////////////////////////////////////////////////////////////// UPDATE DOWNLOAD LINKS FUNCTION
+//////////////////////////////////////////////////////////////////////// UPDATE DOWNLOAD LINKS FUNCTION
   const updateDownloadLinks = type => {
     if (type === "clear") {
       document.getElementById("download-forecast-btn").href = ""
@@ -236,7 +236,7 @@ const app = (() => {
     }
   }
 
-  ////////////////////////////////////////////////////////////////////////  GET DATA FROM API AND MANAGING PLOTS
+////////////////////////////////////////////////////////////////////////  GET DATA FROM API AND MANAGING PLOTS
   const getForecastData = reachID => {
     REACHID = reachID ? reachID : REACHID
     if (!REACHID) return
@@ -362,7 +362,7 @@ const app = (() => {
       })
   }
 
-  //////////////////////////////////////////////////////////////////////// UPDATE STATUS ICONS FUNCTION
+//////////////////////////////////////////////////////////////////////// Update
   const updateStatusIcons = status => {
     for (let key in status) {
       loadingStatus[key] = status[key]
@@ -399,10 +399,6 @@ const app = (() => {
     }
   }
 
-  //////////////////////////////////////////////////////////////////////// Event Listeners
-  inputForecastDate.addEventListener("change", () => getForecastData())
-  checkboxUseLocalTime.addEventListener("change", () => currentDate.innerHTML = getDateAsString(layerAnimationTime))
-
   const giveForecastRetryButton = reachid => {
     clearChartDivs({chartTypes: "forecast"})
     chartForecast.innerHTML = `<button class="btn btn-warning" onclick="app.getForecastData(${reachid})">Retrieve Forecast Data</button>`
@@ -412,9 +408,50 @@ const app = (() => {
     chartRetro.innerHTML = `<button class="btn btn-warning" onclick="app.getRetrospectiveData(${reachid})">Retrieve Retrospective Data</button>`
   }
 
+//////////////////////////////////////////////////////////////////////// Event Listeners
+  inputForecastDate.addEventListener("change", () => getForecastData())
+  checkboxUseLocalTime.addEventListener("change", () => currentDate.innerHTML = getDateAsString(mapTime))
+
+  view.on("click", event => {
+    if (view.zoom < MIN_QUERY_ZOOM) return view.goTo({target: event.mapPoint, zoom: MIN_QUERY_ZOOM});
+    M.toast({html: "Identifying river segment. Charts will load soon.", classes: "orange"})
+    updateStatusIcons({reachid: "load", forecast: "clear", retro: "clear"})
+    queryLayerForID(event)
+  })
+
   return {
     getForecastData,
     getRetrospectiveData,
     setReachID,
   }
 })()
+
+
+// const app = (() => {
+//   'use strict'
+//   //////////////////////////////////////////////////////////////////////// Add legend and lat/lon box
+//   let latlon = L.control({position: "bottomleft"})
+//   latlon.onAdd = () => {
+//     let div = L.DomUtil.create("div")
+//     div.innerHTML = '<div id="mouse-position" class="map-overlay-element"></div>'
+//     return div
+//   }
+//   latlon.addTo(m)
+//   m.on("mousemove", event => document.getElementById("mouse-position").innerHTML = `Lat: ${event.latlng.lat.toFixed(3)}, Lon: ${event.latlng.lng.toFixed(3)}`)
+//   let legend = L.control({position: "bottomright"})
+//   legend.onAdd = () => {
+//     let div = L.DomUtil.create("div", "legend")
+//     const legendEntries = [
+//       ["purple", "20+ year Flow"],
+//       ["red", "10+ year Flow"],
+//       ["gold", "2+ yearFlow"],
+//       ["blue", "Streams"]
+//     ]
+//     const polyLineSVG = (color, label) => `<div><svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polyline points="19 1, 1 6, 19 14, 1 19" stroke="${color}" fill="transparent" stroke-width="2"/></svg>${label}</div>`
+//     div.innerHTML = '<div class="legend">' + legendEntries.map(entry => polyLineSVG(...entry)).join("") + "</div>"
+//     return div
+//   }
+//   legend.addTo(m)
+//
+//
+// })
