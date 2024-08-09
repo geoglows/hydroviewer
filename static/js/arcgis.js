@@ -1,11 +1,12 @@
-const app = require([
+require([
   "esri/Map",
   "esri/views/MapView",
   "esri/layers/MapImageLayer",
   "esri/layers/FeatureLayer",
 ], (Map, MapView, MapImageLayer, FeatureLayer) => {
   'use strict'
-  //////////////////////////////////////////////////////////////////////// State Variables
+
+//////////////////////////////////////////////////////////////////////// State Variables
   const REST_ENDPOINT = 'https://geoglows.ecmwf.int/api/v2'
   const ESRI_LAYER_URL = 'https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer'
   const LOADING_GIF = 'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif'
@@ -18,13 +19,19 @@ const app = require([
   const OSM_WATERWAYS_AS = 'https://services-ap1.arcgis.com/iA7fZQOnjY9D67Zx/arcgis/rest/services/OSM_AS_Waterways/FeatureServer'
   const OSM_WATERWAYS_AU = 'https://services-ap1.arcgis.com/iA7fZQOnjY9D67Zx/arcgis/rest/services/OSM_AU_Waterways/FeatureServer'
 
-  //////////////////////////////////////////////////////////////////////// Element Selectors
+//////////////////////////////////////////////////////////////////////// Element Selectors
   const checkboxLoadForecast = document.getElementById('auto-load-forecasts')
   const checkboxLoadRetro = document.getElementById('auto-load-retrospective')
   const checkboxUseLocalTime = document.getElementById('use-local-time')
   const inputForecastDate = document.getElementById('forecast-date-calendar')
+  const riverName = document.getElementById('river-name')
+  const selectRiverCountry = document.getElementById('riverCountry')
+  const selectOutletCountry = document.getElementById('outletCountry')
+  const selectVPU = document.getElementById('vpuSelect')
 
   const modalCharts = document.getElementById("charts-modal")
+  const modalFilter = document.getElementById("filter-modal")
+  const settingsModal = document.getElementById("settings-modal")
   const chartForecast = document.getElementById("forecastPlot")
   const chartRetro = document.getElementById("retroPlot")
 
@@ -35,10 +42,10 @@ const app = require([
   const slider = document.getElementById('time-slider')
   const currentDate = document.getElementById("current-map-date")
 
-  //////////////////////////////////////////////////////////////////////// Materialize Initialization
+//////////////////////////////////////////////////////////////////////// Materialize Initialization
   M.AutoInit()
 
-  //////////////////////////////////////////////////////////////////////// Set Date Conditions for Data and Maps
+//////////////////////////////////////////////////////////////////////// Set Date Conditions for Data and Maps
   let now = new Date()
   now.setHours(now.getHours() - 12)
   inputForecastDate.max = now.toISOString().split("T")[0]
@@ -46,30 +53,48 @@ const app = require([
   now.setHours(now.getHours() - 59 * 24)
   inputForecastDate.min = now.toISOString().split("T")[0]
 
-  //////////////////////////////////////////////////////////////////////// Manipulate Default Controls and DOM Elements
+//////////////////////////////////////////////////////////////////////// Manipulate Default Controls and DOM Elements
   let loadingStatus = {reachid: "clear", forecast: "clear", retro: "clear"}
+  const MIN_QUERY_ZOOM = 11
   let REACHID
-  const MIN_QUERY_ZOOM = 12
 
-  ////////////////////////////////////////////////////////////////////////  Create Layer, Map, View
+  let definitionExpression = localStorage.getItem("definitionExpression") || ""
+  document.getElementById("definitionString").value = definitionExpression
+
+  fetch('static/json/riverCountries.json')
+    .then(response => response.json())
+    .then(response => {
+        selectRiverCountry.innerHTML = response.map(c => `<option value="${c}">${c}</option>`).join('')
+        M.FormSelect.init(selectRiverCountry)
+      }
+    )
+  fetch('static/json/outletCountries.json')
+    .then(response => response.json())
+    .then(response => {
+        selectOutletCountry.innerHTML = response.map(c => `<option value="${c}">${c}</option>`).join('')
+        M.FormSelect.init(selectOutletCountry)
+      }
+    )
+  fetch('static/json/vpuList.json')
+    .then(response => response.json())
+    .then(response => {
+        selectVPU.innerHTML = response.map(v => `<option value="${v}">${v}</option>`).join('')
+        M.FormSelect.init(selectVPU)
+      }
+    )
+
+////////////////////////////////////////////////////////////////////////  Create Layer, Map, View
   const layer = new MapImageLayer({
     url: ESRI_LAYER_URL,
     sublayers: [
       {
         id: 0,
         visible: true,
-        // definitionExpression: "pop2000 > 100000"
+        definitionExpression: definitionExpression,
       }
     ]
   })
   const regionsLayer = new FeatureLayer({url: OSM_REGIONS_URL})
-  // const naWaterwaysLayer = new FeatureLayer({url: OSM_WATERWAYS_NA})
-  // const caWaterwaysLayer = new FeatureLayer({url: OSM_WATERWAYS_CA})
-  // const saWaterwaysLayer = new FeatureLayer({url: OSM_WATERWAYS_SA})
-  // const euWaterwaysLayer = new FeatureLayer({url: OSM_WATERWAYS_EU})
-  // const afWaterwaysLayer = new FeatureLayer({url: OSM_WATERWAYS_AF})
-  // const asWaterwaysLayer = new FeatureLayer({url: OSM_WATERWAYS_AS})
-  // const auWaterwaysLayer = new FeatureLayer({url: OSM_WATERWAYS_AU})
   const waterwaysLayers = {
     'north-america': new FeatureLayer({url: OSM_WATERWAYS_NA}),
     'central-america': new FeatureLayer({url: OSM_WATERWAYS_CA}),
@@ -93,7 +118,6 @@ const app = require([
   })
 
   const queryLayerForID = event => {
-    // query the regions with the geometry of the click event and log the response
     regionsLayer
       .queryFeatures({
         geometry: event.mapPoint,
@@ -101,7 +125,6 @@ const app = require([
         outFields: ["*"],
       })
       .then(response => {
-        console.log(response)
         waterwaysLayers
           [response.features[0].attributes.Name]
           .queryFeatures({
@@ -113,26 +136,23 @@ const app = require([
             returnGeometry: true
           })
           .then(response => {
-            console.log(response)
-            // put it in the div for the opened modal
             const name = response?.features[0]?.attributes?.name || "Unknown Name"
-            document.getElementById("river-name").innerHTML = `: ${name}`
+            riverName.innerHTML = `: ${name}`
           })
       })
 
-    const queryParameters = {
-      geometry: event.mapPoint,
-      distance: 125,
-      units: "meters",
-      spatialRelationship: "intersects",
-      outFields: ["*"],
-      returnGeometry: true
-    }
     layer
       .findSublayerById(0)
-      .queryFeatures(queryParameters)
+      .queryFeatures({
+        geometry: event.mapPoint,
+        distance: 125,
+        units: "meters",
+        spatialRelationship: "intersects",
+        outFields: ["*"],
+        returnGeometry: true,
+        definitionExpression: definitionExpression,
+      })
       .then(response => {
-        console.log(response);
         if (!response.features.length) {
           M.toast({html: "No river segment found. Zoom in and be precise when selecting rivers.", classes: "red"})
           return
@@ -145,7 +165,6 @@ const app = require([
           return
         }
 
-        // delete previous graphics then add the new one
         view.graphics.removeAll()
         view.graphics.add({
           geometry: response.features[0].geometry,
@@ -159,7 +178,29 @@ const app = require([
       })
   }
 
-  ////////////////////////////////////////////////////////////////////////  Animation Controls
+  const updateLayerDefinitions = () => {
+    // const country = selectRiverCountry.value
+    // const vpu = selectVPU.value
+    // const outletCountry = selectOutletCountry.value
+    // if (country === "All" && vpu === "All" && outletCountry === "All") {
+    //   definitionExpression = ""
+    //   M.Modal.getInstance(modalCharts).close()
+    //   return
+    // }
+    // let definition = ""
+    // if (country !== "All") definition += `Country = '${country}'`
+    // if (vpu !== "All") definition += definition ? ` AND VPU = '${vpu}'` : `VPU = '${vpu}'`
+    // if (outletCountry !== "All") definition += definition ? ` AND OutletCountry = '${outletCountry}'` : `OutletCountry = '${outletCountry}'`
+    // set the definition expression to localstorage
+    definitionExpression = document.getElementById("definitionString").value
+    localStorage.setItem("definitionExpression", definitionExpression)
+    layer.findSublayerById(0).definitionExpression = definitionExpression
+
+    // close the modal
+    M.Modal.getInstance(modalFilter).close()
+  }
+
+////////////////////////////////////////////////////////////////////////  Animation Controls
   const getDateAsString = date => {
     if (checkboxUseLocalTime.checked) return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0") + " " + String(date.getHours()).padStart(2, "0") + ":00:00" + " Local Time"
     return currentDate.innerHTML = mapTime.toISOString().replaceAll("T", " ").replace("Z", "").replace(".000", "") + " UTC"
@@ -207,7 +248,7 @@ const app = require([
   })
   slider.addEventListener("change", _ => refreshLayerAnimation())
 
-  //////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
+//////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
   const fetchData = reachid => {
     REACHID = reachid ? reachid : REACHID
     if (!REACHID) return updateStatusIcons({reachid: "fail"})
@@ -221,7 +262,7 @@ const app = require([
   const setReachID = () => {
     REACHID = prompt("Please enter a 9 digit River ID to search for.")
     if (!REACHID) return
-    if (!/^\d{9}$/.test(REACHID)) return alert("River ID numbers should be 9 digit numbers") // check that it is a 9 digit number
+    if (!/^\d{9}$/.test(REACHID)) return alert("River ID numbers should be 9 digit numbers") // check that it is a 9-digit number
     fetchData(parseInt(REACHID))
   }
 
@@ -345,7 +386,8 @@ const app = require([
                   },
                   {
                     label: 'All',
-                    step: 'All',
+                    count: response.datetime.length,
+                    step: 'day',
                   }
                 ]
               },
@@ -389,7 +431,6 @@ const app = require([
       return `<span class="status-${loadingStatus[key[0]]}">${key[1]}: ${message}</span>`
     }).join(' - ')
   }
-
   const clearChartDivs = (chartTypes) => {
     if (chartTypes === "forecast" || chartTypes === null) {
       chartForecast.innerHTML = ""
@@ -398,19 +439,23 @@ const app = require([
       chartRetro.innerHTML = ""
     }
   }
-
   const giveForecastRetryButton = reachid => {
     clearChartDivs({chartTypes: "forecast"})
-    chartForecast.innerHTML = `<button class="btn btn-warning" onclick="app.getForecastData(${reachid})">Retrieve Forecast Data</button>`
+    chartForecast.innerHTML = `<button class="btn btn-warning" onclick="window.getForecastData(${reachid})">Retrieve Forecast Data</button>`
   }
   const giveRetrospectiveRetryButton = reachid => {
     clearChartDivs({chartTypes: "historical"})
-    chartRetro.innerHTML = `<button class="btn btn-warning" onclick="app.getRetrospectiveData(${reachid})">Retrieve Retrospective Data</button>`
+    chartRetro.innerHTML = `<button class="btn btn-warning" onclick="window.getRetrospectiveData(${reachid})">Retrieve Retrospective Data</button>`
   }
 
 //////////////////////////////////////////////////////////////////////// Event Listeners
   inputForecastDate.addEventListener("change", () => getForecastData())
   checkboxUseLocalTime.addEventListener("change", () => currentDate.innerHTML = getDateAsString(mapTime))
+  // on window resize, resize all the plotly charts
+  window.addEventListener('resize', () => {
+    Plotly.Plots.resize(chartForecast)
+    Plotly.Plots.resize(chartRetro)
+  })
 
   view.on("click", event => {
     if (view.zoom < MIN_QUERY_ZOOM) return view.goTo({target: event.mapPoint, zoom: MIN_QUERY_ZOOM});
@@ -419,39 +464,9 @@ const app = require([
     queryLayerForID(event)
   })
 
-  return {
-    getForecastData,
-    getRetrospectiveData,
-    setReachID,
-  }
-})()
-
-
-// const app = (() => {
-//   'use strict'
-//   //////////////////////////////////////////////////////////////////////// Add legend and lat/lon box
-//   let latlon = L.control({position: "bottomleft"})
-//   latlon.onAdd = () => {
-//     let div = L.DomUtil.create("div")
-//     div.innerHTML = '<div id="mouse-position" class="map-overlay-element"></div>'
-//     return div
-//   }
-//   latlon.addTo(m)
-//   m.on("mousemove", event => document.getElementById("mouse-position").innerHTML = `Lat: ${event.latlng.lat.toFixed(3)}, Lon: ${event.latlng.lng.toFixed(3)}`)
-//   let legend = L.control({position: "bottomright"})
-//   legend.onAdd = () => {
-//     let div = L.DomUtil.create("div", "legend")
-//     const legendEntries = [
-//       ["purple", "20+ year Flow"],
-//       ["red", "10+ year Flow"],
-//       ["gold", "2+ yearFlow"],
-//       ["blue", "Streams"]
-//     ]
-//     const polyLineSVG = (color, label) => `<div><svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><polyline points="19 1, 1 6, 19 14, 1 19" stroke="${color}" fill="transparent" stroke-width="2"/></svg>${label}</div>`
-//     div.innerHTML = '<div class="legend">' + legendEntries.map(entry => polyLineSVG(...entry)).join("") + "</div>"
-//     return div
-//   }
-//   legend.addTo(m)
-//
-//
-// })
+  window.setReachID = setReachID
+  window.getForecastData = getForecastData
+  window.getRetrospectiveData = getRetrospectiveData
+  window.updateLayerDefinitions = updateLayerDefinitions
+  window.layer = layer
+})

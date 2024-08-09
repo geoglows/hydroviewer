@@ -16,9 +16,9 @@
 
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
-  <link
-    rel="stylesheet"
-    href="https://js.arcgis.com/4.30/esri/themes/light/main.css"/>
+  <!--  <link-->
+  <!--    rel="stylesheet"-->
+  <!--    href="https://js.arcgis.com/4.30/esri/themes/light/main.css"/>-->
   <script src="https://js.arcgis.com/4.30/"></script>
 
   <link
@@ -44,8 +44,6 @@
         <button class="btn" id="animationPlus1"><i class="material-icons">chevron_right</i></button>
       </div>
       <div class="button-group">
-        <button class="btn" role="button" onclick="app.findLatLon()">Zoom to Lat/Lon</button>
-        <button class="btn margin" role="button" onclick="app.clearMarkers()">Remove Map Marker</button>
         <label>
           <input id="auto-load-forecasts" type="checkbox" checked="checked"/>
           <span>Retrieve Forecast</span>
@@ -69,7 +67,7 @@
   <div class="modal-content" style="display: flex; flex-direction: column; align-items: center">
     <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%">
       <h4 style="margin: 0" class="hide-on-small-only">Streamflow<span id="river-name"></span></h4>
-      <button class="btn" role="button" onclick="app.setReachID()">Enter River ID</button>
+      <button class="btn" role="button" onclick="setReachID()">Enter River ID</button>
       <input type="date" id="forecast-date-calendar" name="forecast-date-calendar" min="2024-07-01" onkeydown="return false" style="max-width: 150px;">
     </div>
     <div id="request-status" class="load-status"></div>
@@ -84,6 +82,41 @@
     <a class="modal-close waves-effect waves-green btn-flat">Close</a>
   </div>
 </div>
+<div id="filter-modal" class="modal bottom-sheet" style="height: 75%">
+  <div class="modal-content" style="display: flex; flex-direction: column; align-items: center">
+    <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%">
+      <h4>Filter Streams on Map</h4>
+    </div>
+    <div style="width: 100%">
+      <div>
+        <label for="outletCountry">River Outlet Country</label>
+        <select id="outletCountry" multiple>
+          <option value="All">All</option>
+        </select>
+      </div>
+      <div>
+        <label for="riverCountry">River Country</label>
+        <select id="riverCountry" multiple>
+          <option value="All">All</option>
+        </select>
+      </div>
+      <div>
+        <label for="vpuSelect">VPU Number</label>
+        <select id="vpuSelect" multiple>
+          <option value="All">All</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <label for="definitionString">Layer Definition</label>
+      <input type="text" id="definitionString" placeholder=""/>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button onclick="window.updateLayerDefinitions()">Filter</button>
+    <a class="modal-close waves-effect waves-green btn-flat">Close</a>
+  </div>
+</div>
 
 <div class="body-wrapper">
   <div class="nav-bar-wrapper" style="background-color: #81d4fa">
@@ -91,6 +124,7 @@
       <div style="font-size: 2rem; font-weight: bolder">GEOGLOWS</div>
     </div>
     <div>
+      <a class="waves-effect waves-light btn modal-trigger" href="#filter-modal"><i class="material-icons">filter_list</i></a>
       <a class="waves-effect waves-light btn modal-trigger" href="#charts-modal"><i class="material-icons">show_chart</i></a>
       <a class="waves-effect waves-light btn modal-trigger" href="#settings-modal"><i class="material-icons">settings</i></a>
     </div>
