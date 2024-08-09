@@ -3,12 +3,11 @@ require([
   "esri/views/MapView",
   "esri/layers/MapImageLayer",
   "esri/layers/FeatureLayer",
-  "esri/geometry/Extent",
   "esri/widgets/Home",
   "esri/widgets/ScaleBar",
   "esri/widgets/Legend",
   "esri/widgets/Expand",
-], (Map, MapView, MapImageLayer, FeatureLayer, Extent, Home, ScaleBar, Legend, Expand) => {
+], (Map, MapView, MapImageLayer, FeatureLayer, Home, ScaleBar, Legend, Expand) => {
   'use strict'
 
 //////////////////////////////////////////////////////////////////////// Constants Variables
@@ -151,24 +150,6 @@ require([
   view.ui.add(homeBtn, "top-left");
   view.ui.add(scaleBar, "bottom-right");
   view.ui.add(legendExpand, "bottom-left");
-
-  // Define the extent limits
-  const minExtent = new Extent({
-    xmin: -180,
-    ymin: -85,
-    xmax: 180,
-    ymax: 85,
-    spatialReference: {wkid: 4326}
-  });
-  let previousExtent = view.extent;
-  view.watch("extent", (newExtent) => {
-    if (!minExtent.contains(newExtent)) {
-      view.extent = previousExtent;
-    } else {
-      previousExtent = newExtent;
-    }
-  });
-
 
   const queryLayerForID = event => {
     regionsLayer
