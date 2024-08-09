@@ -235,7 +235,7 @@ require([
       outletCountry.forEach(c => c === 'All' ? null : definitions.push(`outletcountry = '${c}'`))
     }
     if (vpu !== "All") {
-      vpu.forEach(v => v === 'All' ? null : definitions.push(`vpu = '${v}'`))
+      vpu.forEach(v => v === 'All' ? null : definitions.push(`vpu = ${v}`))
     }
     if (customString !== "") {
       definitions.push(customString)
