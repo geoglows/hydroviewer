@@ -135,7 +135,7 @@ html, body {
 
 /* Override materialize css styles */
 label {
-    font-size: 1rem !important;
+    font-size: 1.2rem !important;
 }
 
 ul.dropdown-content {
@@ -154,6 +154,10 @@ button {
 
 .modal.bottom-sheet {
     max-height: 75%;
+}
+
+button > a {
+    color: unset;
 }
 
 /* on mobile screens, change the download-buttons class */

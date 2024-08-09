@@ -26,7 +26,6 @@ require([
 //////////////////////////////////////////////////////////////////////// Element Selectors
   const checkboxLoadForecast = document.getElementById('auto-load-forecasts')
   const checkboxLoadRetro = document.getElementById('auto-load-retrospective')
-  const checkboxUseLocalTime = document.getElementById('use-local-time')
   const inputForecastDate = document.getElementById('forecast-date-calendar')
   const riverName = document.getElementById('river-name')
   const selectRiverCountry = document.getElementById('riverCountry')
@@ -37,32 +36,16 @@ require([
 
   const modalCharts = document.getElementById("charts-modal")
   const modalFilter = document.getElementById("filter-modal")
-  const settingsModal = document.getElementById("settings-modal")
   const chartForecast = document.getElementById("forecastPlot")
   const chartRetro = document.getElementById("retroPlot")
-
-  const playButton = document.getElementById('animationPlay')
-  const stopButton = document.getElementById('animationStop')
-  const plus1Button = document.getElementById('animationPlus1')
-  const back1Button = document.getElementById('animationBack1')
-  const slider = document.getElementById('time-slider')
-  const currentDate = document.getElementById("current-map-date")
 
 //////////////////////////////////////////////////////////////////////// Materialize Initialization
   M.AutoInit()
 
   // if on mobile, show a message with instructions. put the toast in the center of the screen vertically
   if (window.innerWidth < 800) {
-    M.toast({html: "Swipe to pan. Pinch to Zoom. Tap to select rivers. Swipe this message to dismiss.", classes: "blue custom-toast-placement", displayLength: 60000})
+    M.toast({html: "Swipe to pan. Pinch to Zoom. Tap to select rivers. Swipe this message to dismiss.", classes: "blue custom-toast-placement", displayLength: 10000})
   }
-
-//////////////////////////////////////////////////////////////////////// Set Date Conditions for Data and Maps
-  let now = new Date()
-  now.setHours(now.getHours() - 12)
-  inputForecastDate.max = now.toISOString().split("T")[0]
-  inputForecastDate.value = now.toISOString().split("T")[0]
-  now.setHours(now.getHours() - 59 * 24)
-  inputForecastDate.min = now.toISOString().split("T")[0]
 
 //////////////////////////////////////////////////////////////////////// Manipulate Default Controls and DOM Elements
   let loadingStatus = {reachid: "clear", forecast: "clear", retro: "clear"}
@@ -130,7 +113,6 @@ require([
       minZoom: 0,
     },
   })
-  view.navigation.browserTouchPanEnabled = true;
   const homeBtn = new Home({
     view: view
   });
@@ -147,9 +129,16 @@ require([
     expandTooltip: "Expand Legend",
     expanded: false
   });
+  const filterButton = document.createElement('div');
+  filterButton.className = "esri-widget--button esri-widget esri-interactive";
+  filterButton.innerHTML = `<span class="esri-icon-filter"></span>`;
+  filterButton.addEventListener('click', () => M.Modal.getInstance(modalFilter).open());
+
   view.ui.add(homeBtn, "top-left");
+  view.ui.add(filterButton, "top-left");
   view.ui.add(scaleBar, "bottom-right");
   view.ui.add(legendExpand, "bottom-left");
+  view.navigation.browserTouchPanEnabled = true;
 
   const queryLayerForID = event => {
     regionsLayer
@@ -198,7 +187,6 @@ require([
           console.error(error)
           return
         }
-
         view.graphics.removeAll()
         view.graphics.add({
           geometry: response.features[0].geometry,
@@ -266,54 +254,6 @@ require([
     definitionDiv.value = definitionExpression
   }
 
-////////////////////////////////////////////////////////////////////////  Animation Controls
-  const getDateAsString = date => {
-    if (checkboxUseLocalTime.checked) return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0") + " " + String(date.getHours()).padStart(2, "0") + ":00:00" + " Local Time"
-    return currentDate.innerHTML = mapTime.toISOString().replaceAll("T", " ").replace("Z", "").replace(".000", "") + " UTC"
-  }
-  let mapTime = new Date()
-  mapTime = new Date(mapTime.toISOString())
-  mapTime.setUTCHours(0)
-  mapTime.setUTCMinutes(0)
-  mapTime.setUTCSeconds(0)
-  mapTime.setUTCMilliseconds(0)
-  const animationDays = 10  // 15 days
-  const stepsPerDay = 8  // 3 hour steps
-  const numAnimateSteps = animationDays * stepsPerDay
-  const startDateTime = new Date(mapTime)
-  const endDateTime = new Date(mapTime.setUTCHours(animationDays * 24))
-  let animate = false
-  let animateSpeed = 750
-  mapTime = new Date(startDateTime)
-  currentDate.innerHTML = getDateAsString(mapTime)
-  const refreshLayerAnimation = () => {
-    mapTime = new Date(startDateTime)
-    mapTime.setUTCHours(slider.value * 3)
-    currentDate.innerHTML = getDateAsString(mapTime)
-    esriStreamLayer.setTimeRange(mapTime, endDateTime)
-  }
-  const playAnimation = (once = false) => {
-    if (!animate) return
-    animate = !once  // toggle animation if play once (once =true, animate = false)
-    mapTime < endDateTime ? slider.value = Number(slider.value) + 1 : slider.value = 0
-    refreshLayerAnimation()
-    setTimeout(playAnimation, animateSpeed)
-  }
-  playButton.addEventListener("click", () => {
-    animate = true
-    playAnimation()
-  })
-  stopButton.addEventListener("click", () => animate = false)
-  plus1Button.addEventListener("click", () => {
-    animate = true
-    playAnimation(true)
-  })
-  back1Button.addEventListener("click", () => {
-    mapTime > startDateTime ? slider.value = Number(slider.value) - 1 : slider.value = numAnimateSteps
-    refreshLayerAnimation()
-  })
-  slider.addEventListener("change", _ => refreshLayerAnimation())
-
 //////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
   const fetchData = reachid => {
     REACHID = reachid ? reachid : REACHID
@@ -321,6 +261,7 @@ require([
     M.Modal.getInstance(modalCharts).open()
     updateStatusIcons({reachid: "ready", forecast: "clear", retro: "clear"})
     clearChartDivs()
+    updateDownloadLinks("set")
     checkboxLoadForecast.checked ? getForecastData() : giveForecastRetryButton(REACHID)
     checkboxLoadRetro.checked ? getRetrospectiveData() : giveRetrospectiveRetryButton(REACHID)
   }
@@ -335,11 +276,15 @@ require([
 //////////////////////////////////////////////////////////////////////// UPDATE DOWNLOAD LINKS FUNCTION
   const updateDownloadLinks = type => {
     if (type === "clear") {
-      document.getElementById("download-forecast-btn").href = ""
-      document.getElementById("download-historical-btn").href = ""
+      document.getElementById("download-forecast-link").href = ""
+      document.getElementById("download-historical-link").href = ""
+      document.getElementById("download-forecast-btn").disabled = true
+      document.getElementById("download-historical-btn").disabled = true
     } else if (type === "set") {
-      document.getElementById("download-forecast-btn").href = `${REST_ENDPOINT}/forecast/${REACHID}`
-      document.getElementById("download-historical-btn").href = `${REST_ENDPOINT}/retrospective/${REACHID}`
+      document.getElementById("download-forecast-link").href = `${REST_ENDPOINT}/forecast/${REACHID}`
+      document.getElementById("download-historical-link").href = `${REST_ENDPOINT}/retrospective/${REACHID}`
+      document.getElementById("download-forecast-btn").disabled = false
+      document.getElementById("download-historical-btn").disabled = false
     }
   }
 
@@ -391,9 +336,9 @@ require([
             title: `River Forecast for ${REACHID}`,
             xaxis: {title: "Date (UTC +00:00)"},
             yaxis: {title: "Discharge (m³/s)"},
+            legend: {'orientation': 'h'},
           }
         )
-        updateDownloadLinks("set")
         updateStatusIcons({forecast: "ready"})
       })
       .catch(response => {
@@ -405,7 +350,6 @@ require([
   const getRetrospectiveData = () => {
     if (!REACHID) return
     updateStatusIcons({retro: "load"})
-    updateDownloadLinks("clear")
     chartRetro.innerHTML = `<img alt="loading signal" src=${LOADING_GIF}>`
     const defaultDateRange = ['2015-01-01', new Date().toISOString().split("T")[0]]
     fetch(
@@ -467,7 +411,6 @@ require([
             }
           }
         )
-        updateDownloadLinks("set")
         updateStatusIcons({retro: "ready"})
       })
       .catch(() => {
@@ -513,22 +456,19 @@ require([
   }
   const giveForecastRetryButton = reachid => {
     clearChartDivs({chartTypes: "forecast"})
-    chartForecast.innerHTML = `<button class="btn btn-warning" onclick="window.getForecastData(${reachid})">Retrieve Forecast Data</button>`
+    chartForecast.innerHTML = `<button class="btn btn-warning" onclick="window.getForecastData(${reachid})">Show Forecast Plots</button>`
   }
   const giveRetrospectiveRetryButton = reachid => {
     clearChartDivs({chartTypes: "historical"})
-    chartRetro.innerHTML = `<button class="btn btn-warning" onclick="window.getRetrospectiveData(${reachid})">Retrieve Retrospective Data</button>`
+    chartRetro.innerHTML = `<button class="btn btn-warning" onclick="window.getRetrospectiveData(${reachid})">Show Retrospective Plots</button>`
   }
 
 //////////////////////////////////////////////////////////////////////// Event Listeners
   inputForecastDate.addEventListener("change", () => getForecastData())
-  checkboxUseLocalTime.addEventListener("change", () => currentDate.innerHTML = getDateAsString(mapTime))
-  // on window resize, resize all the plotly charts
   window.addEventListener('resize', () => {
     Plotly.Plots.resize(chartForecast)
     Plotly.Plots.resize(chartRetro)
   })
-
   view.on("click", event => {
     if (view.zoom < MIN_QUERY_ZOOM) return view.goTo({target: event.mapPoint, zoom: MIN_QUERY_ZOOM});
     M.toast({html: "Identifying river segment. Charts will load soon.", classes: "orange"})
@@ -536,6 +476,7 @@ require([
     queryLayerForID(event)
   })
 
+//////////////////////////////////////////////////////////////////////// Export alternatives
   window.setReachID = setReachID
   window.getForecastData = getForecastData
   window.getRetrospectiveData = getRetrospectiveData
