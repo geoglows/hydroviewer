@@ -451,6 +451,12 @@ require([
                     stepmode: 'backward'
                   },
                   {
+                    count: 30,
+                    label: '30 years',
+                    step: 'year',
+                    stepmode: 'backward'
+                  },
+                  {
                     label: 'All',
                     count: response.datetime.length,
                     step: 'day',
