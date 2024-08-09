@@ -16,9 +16,9 @@
 
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
-  <!--  <link-->
-  <!--    rel="stylesheet"-->
-  <!--    href="https://js.arcgis.com/4.30/esri/themes/light/main.css"/>-->
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.30/esri/themes/light/main.css"/>
   <script src="https://js.arcgis.com/4.30/"></script>
 
   <link
@@ -90,30 +90,34 @@
     <div style="width: 100%">
       <div>
         <label for="outletCountry">River Outlet Country</label>
-        <select id="outletCountry" multiple>
-          <option value="All">All</option>
+        <select id="outletCountry" class="browser default" multiple>
+          <option value="All" selected>All</option>
         </select>
       </div>
       <div>
         <label for="riverCountry">River Country</label>
-        <select id="riverCountry" multiple>
-          <option value="All">All</option>
+        <select id="riverCountry" class="browser default" multiple>
+          <option value="All" selected>All</option>
         </select>
       </div>
       <div>
         <label for="vpuSelect">VPU Number</label>
-        <select id="vpuSelect" multiple>
-          <option value="All">All</option>
+        <select id="vpuSelect" class="browser default" multiple>
+          <option value="All" selected>All</option>
         </select>
       </div>
-    </div>
-    <div>
-      <label for="definitionString">Layer Definition</label>
-      <input type="text" id="definitionString" placeholder=""/>
+      <div>
+        <label for="definitionString">Custom Layer Definition Text</label>
+        <input type="text" id="definitionString" placeholder=""/>
+      </div>
+      <div>
+        <label for="definition-expression">Definition Currently Displayed</label>
+        <input type="text" id="definition-expression" disabled/>
+      </div>
     </div>
   </div>
   <div class="modal-footer">
-    <button onclick="window.updateLayerDefinitions()">Filter</button>
+    <button class="btn" onclick="window.updateLayerDefinitions()">Filter</button>
     <a class="modal-close waves-effect waves-green btn-flat">Close</a>
   </div>
 </div>
@@ -124,9 +128,10 @@
       <div style="font-size: 2rem; font-weight: bolder">GEOGLOWS</div>
     </div>
     <div>
-      <a class="waves-effect waves-light btn modal-trigger" href="#filter-modal"><i class="material-icons">filter_list</i></a>
-      <a class="waves-effect waves-light btn modal-trigger" href="#charts-modal"><i class="material-icons">show_chart</i></a>
-      <a class="waves-effect waves-light btn modal-trigger" href="#settings-modal"><i class="material-icons">settings</i></a>
+      <a data-tooltip="Filter Streams" data-position="bottom" class="waves-effect waves-light btn modal-trigger tooltipped" href="#filter-modal"><i class="material-icons">layers</i></a>
+      <a data-tooltip="Clear Stream Filters" data-position="bottom"  class="waves-effect waves-light btn tooltipped" onclick="window.resetDefinitionExpression()"><i class="material-icons">layers_clear</i></a>
+      <a data-tooltip="View Charts" data-position="bottom"  class="waves-effect waves-light btn modal-trigger tooltipped" href="#charts-modal"><i class="material-icons">show_chart</i></a>
+      <a data-tooltip="App Settings" data-position="bottom"  class="waves-effect waves-light btn modal-trigger tooltipped" href="#settings-modal"><i class="material-icons">settings</i></a>
     </div>
   </div>
   <div id="map" class="map"></div>

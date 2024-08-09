@@ -3,10 +3,15 @@ require([
   "esri/views/MapView",
   "esri/layers/MapImageLayer",
   "esri/layers/FeatureLayer",
-], (Map, MapView, MapImageLayer, FeatureLayer) => {
+  "esri/geometry/Extent",
+  "esri/widgets/Home",
+  "esri/widgets/ScaleBar",
+  "esri/widgets/Legend",
+  "esri/widgets/Expand",
+], (Map, MapView, MapImageLayer, FeatureLayer, Extent, Home, ScaleBar, Legend, Expand) => {
   'use strict'
 
-//////////////////////////////////////////////////////////////////////// State Variables
+//////////////////////////////////////////////////////////////////////// Constants Variables
   const REST_ENDPOINT = 'https://geoglows.ecmwf.int/api/v2'
   const ESRI_LAYER_URL = 'https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer'
   const LOADING_GIF = 'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif'
@@ -28,6 +33,8 @@ require([
   const selectRiverCountry = document.getElementById('riverCountry')
   const selectOutletCountry = document.getElementById('outletCountry')
   const selectVPU = document.getElementById('vpuSelect')
+  const definitionString = document.getElementById("definitionString")
+  const definitionDiv = document.getElementById("definition-expression")
 
   const modalCharts = document.getElementById("charts-modal")
   const modalFilter = document.getElementById("filter-modal")
@@ -45,6 +52,11 @@ require([
 //////////////////////////////////////////////////////////////////////// Materialize Initialization
   M.AutoInit()
 
+  // if on mobile, show a message with instructions. put the toast in the center of the screen vertically
+  if (window.innerWidth < 800) {
+    M.toast({html: "Swipe to pan. Pinch to Zoom. Tap to select rivers. Swipe this message to dismiss.", classes: "blue custom-toast-placement", displayLength: 60000})
+  }
+
 //////////////////////////////////////////////////////////////////////// Set Date Conditions for Data and Maps
   let now = new Date()
   now.setHours(now.getHours() - 12)
@@ -57,28 +69,26 @@ require([
   let loadingStatus = {reachid: "clear", forecast: "clear", retro: "clear"}
   const MIN_QUERY_ZOOM = 11
   let REACHID
-
-  let definitionExpression = localStorage.getItem("definitionExpression") || ""
-  document.getElementById("definitionString").value = definitionExpression
+  let definitionExpression = ""
 
   fetch('static/json/riverCountries.json')
     .then(response => response.json())
     .then(response => {
-        selectRiverCountry.innerHTML = response.map(c => `<option value="${c}">${c}</option>`).join('')
+        selectRiverCountry.innerHTML += response.map(c => `<option value="${c}">${c}</option>`).join('')
         M.FormSelect.init(selectRiverCountry)
       }
     )
   fetch('static/json/outletCountries.json')
     .then(response => response.json())
     .then(response => {
-        selectOutletCountry.innerHTML = response.map(c => `<option value="${c}">${c}</option>`).join('')
+        selectOutletCountry.innerHTML += response.map(c => `<option value="${c}">${c}</option>`).join('')
         M.FormSelect.init(selectOutletCountry)
       }
     )
   fetch('static/json/vpuList.json')
     .then(response => response.json())
     .then(response => {
-        selectVPU.innerHTML = response.map(v => `<option value="${v}">${v}</option>`).join('')
+        selectVPU.innerHTML += response.map(v => `<option value="${v}">${v}</option>`).join('')
         M.FormSelect.init(selectVPU)
       }
     )
@@ -104,18 +114,61 @@ require([
     'asia': new FeatureLayer({url: OSM_WATERWAYS_AS}),
     'australia': new FeatureLayer({url: OSM_WATERWAYS_AU}),
   }
-
+  // don't let people pan outside the world
   const map = new Map({
     basemap: "dark-gray-vector",
     layers: [layer],
-    spatialReference: {wkid: 102100}
+    spatialReference: {wkid: 102100},
   })
   const view = new MapView({
     container: "map",
     map: map,
-    zoom: 4,
-    center: [-99, 39]
+    zoom: 2,
+    center: [10, 0],
+    constraints: {
+      rotationEnabled: false,
+      snapToZoom: false,
+      minZoom: 0,
+    },
   })
+  view.navigation.browserTouchPanEnabled = true;
+  const homeBtn = new Home({
+    view: view
+  });
+  const scaleBar = new ScaleBar({
+    view: view,
+    unit: "dual"
+  });
+  const legend = new Legend({
+    view: view
+  });
+  const legendExpand = new Expand({
+    view: view,
+    content: legend,
+    expandTooltip: "Expand Legend",
+    expanded: false
+  });
+  view.ui.add(homeBtn, "top-left");
+  view.ui.add(scaleBar, "bottom-right");
+  view.ui.add(legendExpand, "bottom-left");
+
+  // Define the extent limits
+  const minExtent = new Extent({
+    xmin: -180,
+    ymin: -85,
+    xmax: 180,
+    ymax: 85,
+    spatialReference: {wkid: 4326}
+  });
+  let previousExtent = view.extent;
+  view.watch("extent", (newExtent) => {
+    if (!minExtent.contains(newExtent)) {
+      view.extent = previousExtent;
+    } else {
+      previousExtent = newExtent;
+    }
+  });
+
 
   const queryLayerForID = event => {
     regionsLayer
@@ -178,26 +231,58 @@ require([
       })
   }
 
-  const updateLayerDefinitions = () => {
-    // const country = selectRiverCountry.value
-    // const vpu = selectVPU.value
-    // const outletCountry = selectOutletCountry.value
-    // if (country === "All" && vpu === "All" && outletCountry === "All") {
-    //   definitionExpression = ""
-    //   M.Modal.getInstance(modalCharts).close()
-    //   return
-    // }
-    // let definition = ""
-    // if (country !== "All") definition += `Country = '${country}'`
-    // if (vpu !== "All") definition += definition ? ` AND VPU = '${vpu}'` : `VPU = '${vpu}'`
-    // if (outletCountry !== "All") definition += definition ? ` AND OutletCountry = '${outletCountry}'` : `OutletCountry = '${outletCountry}'`
-    // set the definition expression to localstorage
-    definitionExpression = document.getElementById("definitionString").value
-    localStorage.setItem("definitionExpression", definitionExpression)
-    layer.findSublayerById(0).definitionExpression = definitionExpression
+  const buildDefinitionExpression = () => {
+    const riverCountry = M.FormSelect.getInstance(selectRiverCountry).getSelectedValues()
+    const outletCountry = M.FormSelect.getInstance(selectOutletCountry).getSelectedValues()
+    const vpu = M.FormSelect.getInstance(selectVPU).getSelectedValues()
+    const customString = definitionString.value
+    if (
+      riverCountry.length === 1 &&
+      riverCountry[0] === "All" &&
+      outletCountry.length === 1 &&
+      outletCountry[0] === "All" &&
+      vpu.length === 1 &&
+      vpu[0] === "All" &&
+      customString === ""
+    ) return M.Modal.getInstance(modalFilter).close()
 
-    // close the modal
+    let definitions = []
+    if (riverCountry !== "All") {
+      riverCountry.forEach(c => c === 'All' ? null : definitions.push(`rivercountry = '${c}'`))
+    }
+    if (outletCountry !== "All") {
+      outletCountry.forEach(c => c === 'All' ? null : definitions.push(`outletcountry = '${c}'`))
+    }
+    if (vpu !== "All") {
+      vpu.forEach(v => v === 'All' ? null : definitions.push(`vpu = '${v}'`))
+    }
+    if (customString !== "") {
+      definitions.push(customString)
+    }
+    definitionExpression = definitions.join(" OR ")
+    return definitionExpression
+  }
+
+  const updateLayerDefinitions = () => {
+    definitionExpression = buildDefinitionExpression()
+    layer.findSublayerById(0).definitionExpression = definitionExpression
+    definitionDiv.value = definitionExpression
     M.Modal.getInstance(modalFilter).close()
+  }
+
+  const resetDefinitionExpression = () => {
+    // reset the selected values to All on each dropdown
+    selectRiverCountry.value = "All"
+    selectOutletCountry.value = "All"
+    selectVPU.value = "All"
+    M.FormSelect.init(selectRiverCountry)
+    M.FormSelect.init(selectOutletCountry)
+    M.FormSelect.init(selectVPU)
+    definitionString.value = ""
+    // reset the definition expression to empty
+    definitionExpression = ""
+    layer.findSublayerById(0).definitionExpression = definitionExpression
+    definitionDiv.value = definitionExpression
   }
 
 ////////////////////////////////////////////////////////////////////////  Animation Controls
@@ -468,5 +553,6 @@ require([
   window.getForecastData = getForecastData
   window.getRetrospectiveData = getRetrospectiveData
   window.updateLayerDefinitions = updateLayerDefinitions
+  window.resetDefinitionExpression = resetDefinitionExpression
   window.layer = layer
 })

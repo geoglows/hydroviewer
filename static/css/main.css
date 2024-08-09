@@ -125,20 +125,35 @@ html, body {
     flex-direction: column;
 }
 
-button {
-    margin: 5px;
-}
-
-.modal.bottom-sheet {
-    max-height: 75%;
-}
-
 .download-buttons {
     justify-content: space-between;
 }
 
 .download-buttons > * {
     margin: 5px;
+}
+
+/* Override materialize css styles */
+.label {
+    font-size: 1rem !important;
+}
+
+ul.dropdown-content {
+    max-height: 400px;
+}
+
+.custom-toast-placement {
+    position: fixed;
+    top: 30% !important;
+    text-align: center;
+}
+
+button {
+    margin: 5px;
+}
+
+.modal.bottom-sheet {
+    max-height: 75%;
 }
 
 /* on mobile screens, change the download-buttons class */
@@ -149,7 +164,12 @@ button {
         flex-direction: column;
         justify-content: center;
     }
+
     .modal .modal-content {
         padding: 10px;
+    }
+
+    .nav-bar-wrapper {
+        padding: 0 13px;
     }
 }
