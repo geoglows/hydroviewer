@@ -134,7 +134,7 @@ html, body {
 }
 
 /* Override materialize css styles */
-.label {
+label {
     font-size: 1rem !important;
 }
 
