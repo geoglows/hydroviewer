@@ -12,7 +12,6 @@ require([
 
 //////////////////////////////////////////////////////////////////////// Constants Variables
   const REST_ENDPOINT = 'https://geoglows.ecmwf.int/api/v2'
-  const LOADING_GIF = 'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif'
 
   const ESRI_LAYER_URL = 'https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer'
   const OSM_REGIONS_URL = 'https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/OSM_Regions_view/FeatureServer'
@@ -25,6 +24,10 @@ require([
   const OSM_WATERWAYS_AU = 'https://services-ap1.arcgis.com/iA7fZQOnjY9D67Zx/arcgis/rest/services/OSM_AU_Waterways/FeatureServer'
 
   const MIN_QUERY_ZOOM = 11
+  const LOADING_GIF = 'static/img/loading.gif'
+  const riverCountriesJSON = 'static/json/riverCountries.json'
+  const outletCountriesJSON = 'static/json/outletCountries.json'
+  const vpuListJSON = 'static/json/vpuList.json'
 
 //////////////////////////////////////////////////////////////////////// Element Selectors
   const checkboxLoadForecast = document.getElementById('auto-load-forecasts')
@@ -60,21 +63,21 @@ require([
   now.setHours(now.getHours() - 12)
   inputForecastDate.value = now.toISOString().split("T")[0]
 
-  fetch('static/json/riverCountries.json')
+  fetch(riverCountriesJSON)
     .then(response => response.json())
     .then(response => {
         selectRiverCountry.innerHTML += response.map(c => `<option value="${c}">${c}</option>`).join('')
         M.FormSelect.init(selectRiverCountry)
       }
     )
-  fetch('static/json/outletCountries.json')
+  fetch(outletCountriesJSON)
     .then(response => response.json())
     .then(response => {
         selectOutletCountry.innerHTML += response.map(c => `<option value="${c}">${c}</option>`).join('')
         M.FormSelect.init(selectOutletCountry)
       }
     )
-  fetch('static/json/vpuList.json')
+  fetch(vpuListJSON)
     .then(response => response.json())
     .then(response => {
         selectVPU.innerHTML += response.map(v => `<option value="${v}">${v}</option>`).join('')
@@ -113,7 +116,7 @@ require([
     container: "map",
     map: map,
     zoom: 2,
-    center: [15, 0],
+    center: [0, 15],
     constraints: {
       rotationEnabled: false,
       snapToZoom: false,
