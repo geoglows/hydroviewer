@@ -4,10 +4,11 @@ require([
   "esri/layers/MapImageLayer",
   "esri/layers/FeatureLayer",
   "esri/widgets/Home",
+  "esri/widgets/BasemapGallery",
   "esri/widgets/ScaleBar",
   "esri/widgets/Legend",
   "esri/widgets/Expand",
-], (Map, MapView, MapImageLayer, FeatureLayer, Home, ScaleBar, Legend, Expand) => {
+], (Map, MapView, MapImageLayer, FeatureLayer, Home, BasemapGallery, ScaleBar, Legend, Expand) => {
   'use strict'
 
 //////////////////////////////////////////////////////////////////////// Constants Variables
@@ -126,6 +127,9 @@ require([
   const homeBtn = new Home({
     view: view
   });
+  let basemapGallery = new BasemapGallery({
+    view: view
+  });
   const scaleBar = new ScaleBar({
     view: view,
     unit: "dual"
@@ -133,18 +137,27 @@ require([
   const legend = new Legend({
     view: view
   });
+
   const legendExpand = new Expand({
     view: view,
     content: legend,
     expandTooltip: "Expand Legend",
     expanded: false
   });
+  const basemapExpand = new Expand({
+    view: view,
+    content: basemapGallery,
+    expandTooltip: "Expand Basemap Gallery",
+    expanded: false
+  });
+
   const filterButton = document.createElement('div');
   filterButton.className = "esri-widget--button esri-widget esri-interactive";
   filterButton.innerHTML = `<span class="esri-icon-filter"></span>`;
   filterButton.addEventListener('click', () => M.Modal.getInstance(modalFilter).open());
 
   view.ui.add(homeBtn, "top-left");
+  view.ui.add(basemapExpand, "top-right")
   view.ui.add(filterButton, "top-left");
   view.ui.add(scaleBar, "bottom-right");
   view.ui.add(legendExpand, "bottom-left");
