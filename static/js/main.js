@@ -25,10 +25,13 @@ require([
   const OSM_WATERWAYS_AU = 'https://services-ap1.arcgis.com/iA7fZQOnjY9D67Zx/arcgis/rest/services/OSM_AU_Waterways/FeatureServer'
 
   const MIN_QUERY_ZOOM = 11
-  const LOADING_GIF = 'static/img/loading.gif'
-  const riverCountriesJSON = 'static/json/riverCountries.json'
-  const outletCountriesJSON = 'static/json/outletCountries.json'
-  const vpuListJSON = 'static/json/vpuList.json'
+  const LOADING_GIF = '../static/img/loading.gif'
+  const riverCountriesJSON = '../static/json/riverCountries.json'
+  const outletCountriesJSON = '../static/json/outletCountries.json'
+  const vpuListJSON = '../static/json/vpuList.json'
+
+  const lang = (window.location.pathname.split("/").filter(x => x && !x.includes(".html") && !x.includes('viewer'))[0] || 'en-US');
+  Plotly.setPlotConfig({'locale': lang})
 
 //////////////////////////////////////////////////////////////////////// Element Selectors
   const checkboxLoadForecast = document.getElementById('auto-load-forecasts')
@@ -49,17 +52,17 @@ require([
 //////////////////////////////////////////////////////////////////////// Materialize Initialization
   M.AutoInit()
 
-  // if on mobile, show a message with instructions. put the toast in the center of the screen vertically
+// if on mobile, show a message with instructions. put the toast in the center of the screen vertically
   if (window.innerWidth < 800) {
-    M.toast({html: "Swipe to pan. Pinch to Zoom. Tap to select rivers. Swipe this message to dismiss.", classes: "blue custom-toast-placement", displayLength: 10000})
+    M.toast({html: text.prompts.mobile, classes: "blue custom-toast-placement", displayLength: 10000})
   }
 
 //////////////////////////////////////////////////////////////////////// Manipulate Default Controls and DOM Elements
-  let loadingStatus = {reachid: "clear", forecast: "clear", retro: "clear"}
+  let loadingStatus = {riverid: "clear", forecast: "clear", retro: "clear"}
   let riverId
   let definitionExpression = ""
 
-  // set the default date to 12 hours before now UTC time
+// set the default date to 12 hours before now UTC time
   const now = new Date()
   now.setHours(now.getHours() - 12)
   inputForecastDate.value = now.toISOString().split("T")[0]
@@ -107,7 +110,7 @@ require([
     'asia': new FeatureLayer({url: OSM_WATERWAYS_AS}),
     'australia': new FeatureLayer({url: OSM_WATERWAYS_AU}),
   }
-  // don't let people pan outside the world
+// don't let people pan outside the world
   const map = new Map({
     basemap: "dark-gray-vector",
     layers: [layer],
@@ -141,13 +144,13 @@ require([
   const legendExpand = new Expand({
     view: view,
     content: legend,
-    expandTooltip: "Expand Legend",
+    expandTooltip: text.tooltips.legend,
     expanded: false
   });
   const basemapExpand = new Expand({
     view: view,
     content: basemapGallery,
-    expandTooltip: "Expand Basemap Gallery",
+    expandTooltip: text.tooltips.basemap,
     expanded: false
   });
 
@@ -163,7 +166,7 @@ require([
   view.ui.add(legendExpand, "bottom-left");
   view.navigation.browserTouchPanEnabled = true;
 
-  const queryLayerForID = event => {
+  const queryLayerForName = event => {
     regionsLayer
       .queryFeatures({
         geometry: event.mapPoint,
@@ -182,11 +185,12 @@ require([
             returnGeometry: true
           })
           .then(response => {
-            const name = response?.features[0]?.attributes?.name || "Unknown Name"
+            const name = response?.features[0]?.attributes?.name || text.status.unknown
             riverName.innerHTML = `: ${name}`
           })
       })
-
+  }
+  const queryLayerForID = event => {
     layer
       .findSublayerById(0)
       .queryFeatures({
@@ -200,13 +204,13 @@ require([
       })
       .then(response => {
         if (!response.features.length) {
-          M.toast({html: "No river segment found. Zoom in and be precise when selecting rivers.", classes: "red"})
+          M.toast({html: text.prompts.tryRiverAgain, classes: "red", displayDuration: 5000})
           return
         }
         riverId = response.features[0].attributes.comid
         if (riverId === "Null" || !riverId) {
-          updateStatusIcons({reachid: "fail"})
-          M.toast({html: "River not found. Try to zoom in and be precise when clicking the stream.", classes: "red", displayDuration: 5000})
+          updateStatusIcons({riverid: "fail"})
+          M.toast({html: text.prompts.tryRiverAgain, classes: "red", displayDuration: 5000})
           console.error(error)
           return
         }
@@ -278,21 +282,21 @@ require([
   }
 
 //////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
-  const fetchData = reachid => {
-    riverId = reachid ? reachid : riverId
-    if (!riverId) return updateStatusIcons({reachid: "fail"})
+  const fetchData = riverid => {
+    riverId = riverid ? riverid : riverId
+    if (!riverId) return updateStatusIcons({riverid: "fail"})
     M.Modal.getInstance(modalCharts).open()
-    updateStatusIcons({reachid: "ready", forecast: "clear", retro: "clear"})
+    updateStatusIcons({riverid: "ready", forecast: "clear", retro: "clear"})
     clearChartDivs()
     updateDownloadLinks("set")
     checkboxLoadForecast.checked ? getForecastData() : giveForecastRetryButton(riverId)
     checkboxLoadRetro.checked ? getRetrospectiveData() : giveRetrospectiveRetryButton(riverId)
   }
 
-  const setReachID = () => {
-    riverId = prompt("Please enter a 9 digit River ID to search for.")
+  const setRiverId = () => {
+    riverId = prompt(text.prompts.enterRiverID)
     if (!riverId) return
-    if (!/^\d{9}$/.test(riverId)) return alert("River ID numbers should be 9 digit numbers") // check that it is a 9-digit number
+    if (!/^\d{9}$/.test(riverId)) return alert(text.prompts.invalidRiverID)
     fetchData(parseInt(riverId))
   }
 
@@ -300,20 +304,20 @@ require([
   const updateDownloadLinks = type => {
     if (type === "clear") {
       document.getElementById("download-forecast-link").href = ""
-      document.getElementById("download-historical-link").href = ""
+      document.getElementById("download-retrospective-link").href = ""
       document.getElementById("download-forecast-btn").disabled = true
-      document.getElementById("download-historical-btn").disabled = true
+      document.getElementById("download-retrospective-btn").disabled = true
     } else if (type === "set") {
       document.getElementById("download-forecast-link").href = `${REST_ENDPOINT}/forecast/${riverId}`
-      document.getElementById("download-historical-link").href = `${REST_ENDPOINT}/retrospective/${riverId}`
+      document.getElementById("download-retrospective-link").href = `${REST_ENDPOINT}/retrospective/${riverId}`
       document.getElementById("download-forecast-btn").disabled = false
-      document.getElementById("download-historical-btn").disabled = false
+      document.getElementById("download-retrospective-btn").disabled = false
     }
   }
 
 ////////////////////////////////////////////////////////////////////////  GET DATA FROM API AND MANAGING PLOTS
-  const getForecastData = reachID => {
-    riverId = reachID ? reachID : riverId
+  const getForecastData = riverid => {
+    riverId = riverid ? riverid : riverId
     if (!riverId) return
     chartForecast.innerHTML = `<img alt="loading signal" src=${LOADING_GIF}>`
     updateStatusIcons({forecast: "load"})
@@ -329,7 +333,7 @@ require([
             {
               x: response.datetime.concat(response.datetime.slice().toReversed()),
               y: response.flow_uncertainty_lower.concat(response.flow_uncertainty_upper.slice().toReversed()),
-              name: 'Uncertainty',
+              name: `${text.plots.fcLineUncertainty}`,
               fill: 'toself',
               fillcolor: 'rgba(44,182,255,0.6)',
               line: {color: 'rgba(0,0,0,0)'}
@@ -337,28 +341,26 @@ require([
             {
               x: response.datetime,
               y: response.flow_uncertainty_lower,
-              name: 'Uncertainty Lower',
               line: {color: 'rgb(0,166,255)'},
               showlegend: false,
             },
             {
               x: response.datetime,
               y: response.flow_uncertainty_upper,
-              name: 'Uncertainty Upper',
               line: {color: 'rgb(0,166,255)'},
               showlegend: false,
             },
             {
               x: response.datetime,
               y: response.flow_median,
-              name: 'Predicted Flow',
+              name: `${text.plots.fcLineMedian}`,
               line: {color: 'black'}
             },
           ],
           {
-            title: `River Forecast for ${riverId}`,
-            xaxis: {title: "Date (UTC +00:00)"},
-            yaxis: {title: "Discharge (m³/s)"},
+            title: `${text.plots.fcTitle} for ${riverId}`,
+            xaxis: {title: `${text.plots.fcXaxis} (UTC +00:00)`},
+            yaxis: {title: `${text.plots.fcYaxis} (m³/s)`},
             legend: {'orientation': 'h'},
           }
         )
@@ -390,10 +392,10 @@ require([
             }
           ],
           {
-            title: `Simulated River Flow for ${riverId}`,
-            yaxis: {title: "Discharge (m³/s)"},
+            title: `${text.plots.retroTitle} for ${riverId}`,
+            yaxis: {title: `${text.plots.retroYaxis} (m³/s)`},
             xaxis: {
-              title: "Date (UTC +00:00)",
+              title: `${text.plots.retroXaxis} (UTC +00:00)`,
               autorange: false,
               range: defaultDateRange,
               rangeslider: {},
@@ -401,30 +403,30 @@ require([
                 buttons: [
                   {
                     count: 1,
-                    label: '1 year',
+                    label: `1 ${text.words.year}`,
                     step: 'year',
                     stepmode: 'backward'
                   },
                   {
                     count: 5,
-                    label: '5 years',
+                    label: `5 ${text.words.years}`,
                     step: 'year',
                     stepmode: 'backward'
                   },
                   {
                     count: 10,
-                    label: '10 years',
+                    label: `10 ${text.words.years}`,
                     step: 'year',
                     stepmode: 'backward'
                   },
                   {
                     count: 30,
-                    label: '30 years',
+                    label: `30 ${text.words.years}`,
                     step: 'year',
                     stepmode: 'backward'
                   },
                   {
-                    label: 'All',
+                    label: `text.words.all`,
                     count: response.datetime.length,
                     step: 'day',
                   }
@@ -448,25 +450,21 @@ require([
       loadingStatus[key] = status[key]
     }
     document.getElementById("request-status").innerHTML = [
-      ['reachid', 'River ID'],
-      ['forecast', 'Forecast'],
-      ['retro', 'Retrospective']
+      'riverid', 'forecast', 'retro'
     ].map(key => {
-      let message
-      switch (loadingStatus[key[0]]) {
+      let message = text.status.clear
+      switch (loadingStatus[key]) {
         case "load":
-          message = key[0] === "reachid" ? "Identifying" : "Loading"
+          message = text.status.load
           break
         case "ready":
-          message = key[0] === "reachid" ? riverId : "Ready"
+          message = key === "riverid" ? riverId : text.status.ready
           break
         case "fail":
-          message = "Failed"
+          message = text.status.fail
           break
-        case "clear":
-          message = "none"
       }
-      return `<span class="status-${loadingStatus[key[0]]}">${key[1]}: ${message}</span>`
+      return `<span class="status-${loadingStatus[key]}">${text.words[key]}: ${message}</span>`
     }).join(' - ')
   }
   const clearChartDivs = (chartTypes) => {
@@ -477,13 +475,13 @@ require([
       chartRetro.innerHTML = ""
     }
   }
-  const giveForecastRetryButton = reachid => {
+  const giveForecastRetryButton = riverid => {
     clearChartDivs({chartTypes: "forecast"})
-    chartForecast.innerHTML = `<button class="btn btn-warning" onclick="window.getForecastData(${reachid})">Show Forecast Plots</button>`
+    chartForecast.innerHTML = `<button class="btn btn-warning" onclick="window.getForecastData(${riverid})">${text.inputs.forecast}</button>`
   }
-  const giveRetrospectiveRetryButton = reachid => {
+  const giveRetrospectiveRetryButton = riverid => {
     clearChartDivs({chartTypes: "historical"})
-    chartRetro.innerHTML = `<button class="btn btn-warning" onclick="window.getRetrospectiveData(${reachid})">Show Retrospective Plots</button>`
+    chartRetro.innerHTML = `<button class="btn btn-warning" onclick="window.getRetrospectiveData(${riverid})">${text.inputs.forecast}</button>`
   }
 
 //////////////////////////////////////////////////////////////////////// Event Listeners
@@ -494,13 +492,14 @@ require([
   })
   view.on("click", event => {
     if (view.zoom < MIN_QUERY_ZOOM) return view.goTo({target: event.mapPoint, zoom: MIN_QUERY_ZOOM});
-    M.toast({html: "Identifying river segment. Charts will load soon.", classes: "orange"})
-    updateStatusIcons({reachid: "load", forecast: "clear", retro: "clear"})
+    M.toast({html: text.prompts.findingRiver, classes: "orange"})
+    updateStatusIcons({riverid: "load", forecast: "clear", retro: "clear"})
+    queryLayerForName(event)
     queryLayerForID(event)
   })
 
 //////////////////////////////////////////////////////////////////////// Export alternatives
-  window.setReachID = setReachID
+  window.setRiverId = setRiverId
   window.getForecastData = getForecastData
   window.getRetrospectiveData = getRetrospectiveData
   window.updateLayerDefinitions = updateLayerDefinitions

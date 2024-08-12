@@ -16,15 +16,16 @@
 
   <!-- Plotly -->
   <script src="https://cdn.plot.ly/plotly-2.34.0.min.js" charset="utf-8"></script>
+  <script src="https://cdn.plot.ly/plotly-locale-es-latest.js" charset="utf-8"></script>
 
   <!-- ArcGIS JS -->
   <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css"/>
   <script src="https://js.arcgis.com/4.30/"></script>
 
   <!-- App -->
-  <link rel="stylesheet" href="static/css/main.css"/>
-  <script src="static/js/localization.en-US.js" async></script>
-  <script src="static/js/main.js" defer></script>
+  <link rel="stylesheet" href="../static/css/main.css"/>
+  <script src="../static/js/localization.es.js" async></script>
+  <script src="../static/js/main.js" defer></script>
 
 </head>
 <body>
@@ -95,8 +96,8 @@
     </div>
   </div>
   <div class="modal-footer">
-    <button class="btn" onclick="updateLayerDefinitions()">Apply Filters</button>
-    <button class="btn btn-secondary" onclick="resetDefinitionExpression()">Clear Filters</button>
+    <button class="btn" onclick="window.updateLayerDefinitions()">Apply Filters</button>
+    <button class="btn btn-secondary" onclick="window.resetDefinitionExpression()">Clear Filters</button>
     <a class="modal-close waves-effect waves-green btn-flat">Close</a>
   </div>
 </div>
@@ -107,21 +108,7 @@
     </div>
     <div style="width: 100%">
       <p>
-        GEOGLOWS is the Group on Earth Observations' (GEO) Global Water Sustainability (GLOWS) program.
-        It is best known for a global hydrologic model which was called many names such as the GEOGLOWS ECMWF Streamflow Service, the GEOGLOWS model, or sometimes just GEOGLOWS.
-        The reuse of the name GEOGLOWS led to confusion between the GEOGLOWS program, the hydrologic model, and its products.
-        To clarify this, we introduce the name River Forecast System (RFS) to refer specifically to the hydrologic model.
-        Please use the term River Forecast System (or RFS for short) or "GEOGLOWS Hydrologic Model" when referring to the hydrologic model.
-      </p>
-      <p>
-        The RFS is a physical hydrological model covering the entire globe.
-        It provides two main products.
-        First is a deterministic retrospective daily average river discharge simulation covering 1940-01-01 to about a week behind present.
-        Second is a daily 3-hourly ensemble river discharge forecast covering the next 15 days.
-        From these two products, there are several derivatives such as the styled and animatable maps you see in this app.
-      </p>
-      <p>
-        To learn more about the GEOGLOWS project, including projects such as the RFS, visit <a href="https://geoglows.org" target="_blank">geoglows.org</a>.
+        To learn more about the GEOGLOWS project, visit <a href="https://geoglows.org" target="_blank">geoglows.org</a>.
       </p>
       <p>
         Data downloads and documentation are available at <a href="https://data.geoglows.org" target="_blank">data.geoglows.org</a>.
