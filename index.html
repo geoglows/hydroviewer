@@ -36,11 +36,11 @@
       <input type="date" id="forecast-date-calendar" name="forecast-date-calendar" min="2024-07-01" onkeydown="return false" style="max-width: 150px;">
     </div>
     <div id="request-status" class="load-status"></div>
-    <div id="forecastPlot" class="chart"><h4>Enter a river number or use the map to click on a stream to view river data</h4></div>
+    <div id="forecastPlot" class="chart"><h4>Enter a River ID or use the map to click on a stream to view river data</h4></div>
     <div id="retroPlot" class="chart"></div>
     <div class="download-buttons">
       <button class="btn btn-success" id="download-forecast-btn" disabled><a id="download-forecast-link" target="_blank">Save Forecast Data (CSV)</a></button>
-      <button class="btn btn-success" id="download-retrospective-btn" disabled><a id="download-retrospective-link" target="_blank">Save Retrospective (CSV)</a></button>
+      <button class="btn btn-success" id="download-retrospective-btn" disabled><a id="download-retrospective-link" target="_blank">Save Retrospective Data (CSV)</a></button>
     </div>
   </div>
   <div class="modal-footer" style="text-align: unset">
@@ -84,7 +84,7 @@
         </select>
       </div>
       <div>
-        <label for="definitionString">Enter Custom SQL Filters (<a href="https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer/0">Vist the Esri Living Atlas</a>
+        <label for="definitionString">Enter Custom SQL Filters (<a href="https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer/0">Visit the Esri Living Atlas</a>
           for all attribute options)</label>
         <input type="text" id="definitionString" placeholder=""/>
       </div>
@@ -121,7 +121,7 @@
         From these two products, there are several derivatives such as the styled and animatable maps you see in this app.
       </p>
       <p>
-        To learn more about the GEOGLOWS project, including projects such as the RFS, visit <a href="https://geoglows.org" target="_blank">geoglows.org</a>.
+        To learn more about the GEOGLOWS project, including projects such as the RFS, visit <a href="https://www.geoglows.org" target="_blank">geoglows.org</a>.
       </p>
       <p>
         Data downloads and documentation are available at <a href="https://data.geoglows.org" target="_blank">data.geoglows.org</a>.
@@ -139,11 +139,11 @@
     <div>
       <a class="btn dropdown-trigger" href="#" data-target="language-select"><i class="material-icons">translate</i></a>
       <ul id="language-select" class="dropdown-content">
-        <li><a href="/" data-lang="en-US">English</a></li>
-        <li><a href="/es/" data-lang="es-ES">Spanish</a></li>
+        <li><a href="#" data-lang="en-US">English</a></li>
+        <li><a href="/es/" data-lang="es-ES">Español</a></li>
       </ul>
-      <a data-tooltip="View Charts" data-position="bottom" class="waves-effect waves-light btn modal-trigger tooltipped" href="#charts-modal"><i class="material-icons">show_chart</i></a>
-      <a data-tooltip="Learn More" data-position="bottom" class="waves-effect waves-light btn modal-trigger tooltipped" href="#about-modal"><i class="material-icons">help</i></a>
+      <a data-tooltip="View Charts" data-position="bottom" class="btn modal-trigger tooltipped" href="#charts-modal"><i class="material-icons">show_chart</i></a>
+      <a data-tooltip="Learn More" data-position="bottom" class="btn modal-trigger tooltipped" href="#about-modal"><i class="material-icons">help</i></a>
     </div>
   </div>
   <div id="map" class="map"></div>

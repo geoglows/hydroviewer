@@ -360,7 +360,7 @@ require([
             },
           ],
           {
-            title: `${text.plots.fcTitle} for ${riverId}`,
+            title: `${text.plots.fcTitle} ${riverId}`,
             xaxis: {title: `${text.plots.fcXaxis} (UTC +00:00)`},
             yaxis: {title: `${text.plots.fcYaxis} (m³/s)`},
             legend: {'orientation': 'h'},
@@ -394,7 +394,7 @@ require([
             }
           ],
           {
-            title: `${text.plots.retroTitle} for ${riverId}`,
+            title: `${text.plots.retroTitle} ${riverId}`,
             yaxis: {title: `${text.plots.retroYaxis} (m³/s)`},
             xaxis: {
               title: `${text.plots.retroXaxis} (UTC +00:00)`,

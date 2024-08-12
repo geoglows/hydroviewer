@@ -30,15 +30,15 @@ window.text = {
   },
   "inputs": {
     "forecast": "Mostrar Gráficos de Pronóstico",
-    "retro": "Mostrar Gráficos Retrospectivos"
+    "retro": "Mostrar Gráficos Históricos"
   },
   "plots": {
-    "fcTitle": "Pronóstico del Río",
+    "fcTitle": "Pronóstico del Río para",
     "fcXaxis": "Fecha",
     "fcYaxis": "Caudal",
     "fcLineUncertainty": "Incertidumbre",
     "fcLineMedian": "Flujo Predicho",
-    "retroTitle": "Flujo Retrospectivo",
+    "retroTitle": "Caudal Histórico para",
     "retroXaxis": "Fecha",
     "retroYaxis": "Caudal"
   }

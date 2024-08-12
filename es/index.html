@@ -33,7 +33,7 @@
   <div class="modal-content" style="display: flex; flex-direction: column; align-items: center">
     <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%">
       <h4 style="margin: 0" class="hide-on-small-only">Caudal<span id="river-name"></span></h4>
-      <button class="btn" role="button" onclick="setRiverId()">Entrar el ID del Río</button>
+      <button class="btn" role="button" onclick="setRiverId()">Ingresar el ID del Río</button>
       <input type="date" id="forecast-date-calendar" name="forecast-date-calendar" min="2024-07-01" onkeydown="return false" style="max-width: 150px;">
     </div>
     <div id="request-status" class="load-status"></div>
@@ -41,7 +41,7 @@
     <div id="retroPlot" class="chart"></div>
     <div class="download-buttons">
       <button class="btn btn-success" id="download-forecast-btn" disabled><a id="download-forecast-link" target="_blank">Guardar Datos Pronósticos (CSV)</a></button>
-      <button class="btn btn-success" id="download-retrospective-btn" disabled><a id="download-retrospective-link" target="_blank">Guardar Datos Retrospectivos (CSV)</a></button>
+      <button class="btn btn-success" id="download-retrospective-btn" disabled><a id="download-retrospective-link" target="_blank">Guardar Datos Históricos (CSV)</a></button>
     </div>
   </div>
   <div class="modal-footer" style="text-align: unset">
@@ -128,10 +128,10 @@
       <a class="btn dropdown-trigger" href="#" data-target="language-select"><i class="material-icons">translate</i></a>
       <ul id="language-select" class="dropdown-content">
         <li><a href="/" data-lang="en-US">English</a></li>
-        <li><a href="/es/" data-lang="es-ES">Spanish</a></li>
+        <li><a href="#" data-lang="es-ES">Español</a></li>
       </ul>
-      <a data-tooltip="View Charts" data-position="bottom" class="waves-effect waves-light btn modal-trigger tooltipped" href="#charts-modal"><i class="material-icons">show_chart</i></a>
-      <a data-tooltip="Learn More" data-position="bottom" class="waves-effect waves-light btn modal-trigger tooltipped" href="#about-modal"><i class="material-icons">help</i></a>
+      <a data-tooltip="View Charts" data-position="bottom" class="btn modal-trigger tooltipped" href="#charts-modal"><i class="material-icons">show_chart</i></a>
+      <a data-tooltip="Learn More" data-position="bottom" class="btn modal-trigger tooltipped" href="#about-modal"><i class="material-icons">help</i></a>
     </div>
   </div>
   <div id="map" class="map"></div>

@@ -33,12 +33,12 @@ window.text = {
     "retro": "Show Retrospective Plots"
   },
   "plots": {
-    "fcTitle": "River Forecast",
+    "fcTitle": "River Forecast for",
     "fcXaxis": "Date",
     "fcYaxis": "Discharge",
     "fcLineUncertainty": "Uncertainty",
     "fcLineMedian": "Predicted Flow",
-    "retroTitle": "Retrospective Flow",
+    "retroTitle": "Retrospective Flow for",
     "retroXaxis": "Date",
     "retroYaxis": "Discharge"
   }
