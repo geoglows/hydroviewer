@@ -8,7 +8,8 @@ require([
   "esri/widgets/ScaleBar",
   "esri/widgets/Legend",
   "esri/widgets/Expand",
-], (Map, MapView, MapImageLayer, FeatureLayer, Home, BasemapGallery, ScaleBar, Legend, Expand) => {
+  "esri/intl",
+], (Map, MapView, MapImageLayer, FeatureLayer, Home, BasemapGallery, ScaleBar, Legend, Expand, intl) => {
   'use strict'
 
 //////////////////////////////////////////////////////////////////////// Constants Variables
@@ -32,6 +33,7 @@ require([
 
   const lang = (window.location.pathname.split("/").filter(x => x && !x.includes(".html") && !x.includes('viewer'))[0] || 'en-US');
   Plotly.setPlotConfig({'locale': lang})
+  intl.setLocale(lang)
 
 //////////////////////////////////////////////////////////////////////// Element Selectors
   const checkboxLoadForecast = document.getElementById('auto-load-forecasts')
