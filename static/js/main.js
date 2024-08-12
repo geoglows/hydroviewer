@@ -428,7 +428,7 @@ require([
                     stepmode: 'backward'
                   },
                   {
-                    label: `text.words.all`,
+                    label: `${text.words.all}`,
                     count: response.datetime.length,
                     step: 'day',
                   }
