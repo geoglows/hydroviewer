@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="sv">
 <head>
   <meta charset="UTF-8">
   <title>River Forecast System</title>
@@ -16,7 +16,7 @@
 
   <!-- Plotly -->
   <script src="https://cdn.plot.ly/plotly-2.34.0.min.js" charset="utf-8"></script>
-  <script src="https://cdn.plot.ly/plotly-locale-es-latest.js" charset="utf-8"></script>
+  <script src="https://cdn.plot.ly/plotly-locale-sv-latest.js" charset="utf-8"></script>
 
   <!-- ArcGIS JS -->
   <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css"/>
@@ -24,7 +24,7 @@
 
   <!-- App -->
   <link rel="stylesheet" href="/static/css/main.css"/>
-  <script src="/static/js/localization.es.js" async></script>
+  <script src="/static/js/localization.sv.js" async></script>
   <script src="/static/js/main.js" defer></script>
 
 </head>
@@ -32,16 +32,16 @@
 <div id="charts-modal" class="modal bottom-sheet">
   <div class="modal-content" style="display: flex; flex-direction: column; align-items: center">
     <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%">
-      <h4 style="margin: 0" class="hide-on-small-only">Caudal<span id="river-name"></span></h4>
-      <button class="btn" role="button" onclick="setRiverId()">Ingresar el ID del Río</button>
+      <h4 style="margin: 0" class="hide-on-small-only">Vattendrag<span id="river-name"></span></h4>
+      <button class="btn" role="button" onclick="setRiverId()">Ange flod-ID</button>
       <input type="date" id="forecast-date-calendar" name="forecast-date-calendar" min="2024-07-01" onkeydown="return false" style="max-width: 150px;">
     </div>
     <div id="request-status" class="load-status"></div>
-    <div id="forecastPlot" class="chart"><h4>Ingresar un ID del río o usar el mapa para hacer clic en un río y ver los datos del río</h4></div>
+    <div id="forecastPlot" class="chart"><h4>Ange en flod-ID eller använd kartan för att klicka på en flod och se floddata</h4></div>
     <div id="retroPlot" class="chart"></div>
     <div class="download-buttons">
-      <button class="btn btn-success" id="download-forecast-btn" disabled><a id="download-forecast-link" target="_blank">Guardar Datos Pronósticos (CSV)</a></button>
-      <button class="btn btn-success" id="download-retrospective-btn" disabled><a id="download-retrospective-link" target="_blank">Guardar Datos Históricos (CSV)</a></button>
+      <button class="btn btn-success" id="download-forecast-btn" disabled><a id="download-forecast-link" target="_blank">Ange en flod-ID eller använd kartan för att klicka på en flod och se floddata</a></button>
+      <button class="btn btn-success" id="download-retrospective-btn" disabled><a id="download-retrospective-link" target="_blank">Spara historiska data (CSV)</a></button>
     </div>
   </div>
   <div class="modal-footer" style="text-align: unset">
@@ -49,75 +49,75 @@
       <div style="display: flex; align-items: center; justify-content: left;">
         <label style="margin-inline: 10px">
           <input id="auto-load-forecasts" type="checkbox" checked="checked"/>
-          <span>Mostrar Pronóstico</span>
+          <span>Visa prognos</span>
         </label>
         <label style="margin-inline: 10px">
           <input id="auto-load-retrospective" type="checkbox" checked="checked"/>
-          <span>Mostrar Retro<span class="hide-on-small-only">spectivo</span></span>
+          <span>Visa retro<span class="hide-on-small-only">spektiv</span></span>
         </label>
       </div>
-      <a class="modal-close waves-effect waves-green btn-flat">Cerrar</a>
+      <a class="modal-close waves-effect waves-green btn-flat">Stäng</a>
     </div>
   </div>
 </div>
 <div id="filter-modal" class="modal bottom-sheet" style="height: 75%">
   <div class="modal-content" style="display: flex; flex-direction: column; align-items: center">
     <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%">
-      <h4>Filtrar los Río en el Mapa</h4>
+      <h4>Filtrera floder på kartan</h4>
     </div>
     <div style="width: 100%">
       <div>
-        <label for="outletCountry">País de Salida del Río</label>
+        <label for="outletCountry">Land där floden rinner ut</label>
         <select id="outletCountry" class="browser default" multiple>
-          <option value="All" selected>All</option>
+          <option value="All" selected>Alla</option>
         </select>
       </div>
       <div>
-        <label for="riverCountry">País del Río</label>
+        <label for="riverCountry">Land som floden flyter genom</label>
         <select id="riverCountry" class="browser default" multiple>
-          <option value="All" selected>All</option>
+          <option value="All" selected>Alla</option>
         </select>
       </div>
       <div>
-        <label for="vpuSelect">Número de VPU</label>
+        <label for="vpuSelect">VPU-nummer</label>
         <select id="vpuSelect" class="browser default" multiple>
-          <option value="All" selected>All</option>
+          <option value="All" selected>Alla</option>
         </select>
       </div>
       <div>
-        <label for="definitionString">Ingresar filtros SQL personalizados(<a href="https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer/0">Visitar Esri Living
+        <label for="definitionString">Ange anpassade SQL-filter(<a href="https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer/0">Besök Esri Living
           Atlas</a>
-          para todas las opciones de atributos)</label>
+          för alla attributalternativ)</label>
         <input type="text" id="definitionString" placeholder=""/>
       </div>
       <div>
-        <label for="definition-expression">Definición Mostrada Actualmente</label>
+        <label for="definition-expression">Aktuellt visad definition</label>
         <input type="text" id="definition-expression" disabled/>
       </div>
     </div>
   </div>
   <div class="modal-footer">
-    <button class="btn" onclick="updateLayerDefinitions()">Applicar Filtros</button>
-    <button class="btn btn-secondary" onclick="resetDefinitionExpression()">Borrar Filtros</button>
-    <a class="modal-close waves-effect waves-green btn-flat">Close</a>
+    <button class="btn" onclick="updateLayerDefinitions()">Tillämpa filter</button>
+    <button class="btn btn-secondary" onclick="resetDefinitionExpression()">Rensa filter</button>
+    <a class="modal-close waves-effect waves-green btn-flat">Stäng</a>
   </div>
 </div>
 <div id="about-modal" class="modal bottom-sheet" style="height: 75%">
   <div class="modal-content" style="display: flex; flex-direction: column; align-items: center">
     <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%">
-      <h4>Acerca de GEOGLOWS</h4>
+      <h4>Om GEOGLOWS</h4>
     </div>
     <div style="width: 100%">
       <p>
-        Para obtener más información sobre el proyecto GEOGLOWS, visite <a href="https://geoglows.org" target="_blank">geoglows.org</a>.
+        För mer information om GEOGLOWS-projektet, besök <a href="https://geoglows.org" target="_blank">geoglows.org</a>.
       </p>
       <p>
-        Las descargas de datos y la documentación están disponibles en <a href="https://data.geoglows.org" target="_blank">data.geoglows.org</a>.
+        Nedladdningar av data och dokumentation finns tillgängliga på <a href="https://data.geoglows.org" target="_blank">data.geoglows.org</a>.
       </p>
     </div>
   </div>
   <div class="modal-footer">
-    <a class="modal-close waves-effect waves-green btn-flat">Close</a>
+    <a class="modal-close waves-effect waves-green btn-flat">Stäng</a>
   </div>
 </div>
 
@@ -128,9 +128,9 @@
       <a class="btn dropdown-trigger" href="#" data-target="language-select"><i class="material-icons">translate</i></a>
       <ul id="language-select" class="dropdown-content">
         <li><a href="/" data-lang="en-US">English</a></li>
-        <li><a href="#" data-lang="es-ES">Español</a></li>
+        <li><a href="/es/" data-lang="es-ES">Español</a></li>
         <li><a href="/fr" data-lang="fr-FR">Français</a></li>
-        <li><a href="/sv/" data-lang="sv-SV">Svenska</a></li>
+        <li><a href="#" data-lang="sv-SV">Svenska</a></li>
       </ul>
       <a data-tooltip="View Charts" data-position="bottom" class="btn modal-trigger tooltipped" href="#charts-modal"><i class="material-icons">show_chart</i></a>
       <a data-tooltip="Learn More" data-position="bottom" class="btn modal-trigger tooltipped" href="#about-modal"><i class="material-icons">help</i></a>
