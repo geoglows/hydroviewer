@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sv">
 <head>
   <meta charset="UTF-8">
   <title>River Forecast System</title>
@@ -40,7 +40,7 @@
     <div id="forecastPlot" class="chart"><h4>Ange en flod-ID eller använd kartan för att klicka på en flod och se floddata</h4></div>
     <div id="retroPlot" class="chart"></div>
     <div class="download-buttons">
-      <button class="btn btn-success" id="download-forecast-btn" disabled><a id="download-forecast-link" target="_blank">Spara prognosdata (CSV)</a></button>
+      <button class="btn btn-success" id="download-forecast-btn" disabled><a id="download-forecast-link" target="_blank">Ange en flod-ID eller använd kartan för att klicka på en flod och se floddata</a></button>
       <button class="btn btn-success" id="download-retrospective-btn" disabled><a id="download-retrospective-link" target="_blank">Spara historiska data (CSV)</a></button>
     </div>
   </div>
@@ -85,7 +85,7 @@
         </select>
       </div>
       <div>
-        <label for="definitionString">Ange anpassade SQL-filter (<a href="https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer/0">Besök Esri Living
+        <label for="definitionString">Ange anpassade SQL-filter(<a href="https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer/0">Besök Esri Living
           Atlas</a>
           för alla attributalternativ)</label>
         <input type="text" id="definitionString" placeholder=""/>
@@ -109,7 +109,7 @@
     </div>
     <div style="width: 100%">
       <p>
-        För mer information om GEOGLOWS-projektet, inklusive projekt som RFS, besök <a href="https://geoglows.org" target="_blank">geoglows.org</a>.
+        För mer information om GEOGLOWS-projektet, besök <a href="https://geoglows.org" target="_blank">geoglows.org</a>.
       </p>
       <p>
         Nedladdningar av data och dokumentation finns tillgängliga på <a href="https://data.geoglows.org" target="_blank">data.geoglows.org</a>.
@@ -128,9 +128,9 @@
       <a class="btn dropdown-trigger" href="#" data-target="language-select"><i class="material-icons">translate</i></a>
       <ul id="language-select" class="dropdown-content">
         <li><a href="/" data-lang="en-US">English</a></li>
-        <li><a href="#" data-lang="es-ES">Español</a></li>
+        <li><a href="/es/" data-lang="es-ES">Español</a></li>
         <li><a href="/fr" data-lang="fr-FR">Français</a></li>
-        <li><a href="/sv/" data-lang="sv-SV">Svenska</a></li>
+        <li><a href="#" data-lang="sv-SV">Svenska</a></li>
       </ul>
       <a data-tooltip="View Charts" data-position="bottom" class="btn modal-trigger tooltipped" href="#charts-modal"><i class="material-icons">show_chart</i></a>
       <a data-tooltip="Learn More" data-position="bottom" class="btn modal-trigger tooltipped" href="#about-modal"><i class="material-icons">help</i></a>
