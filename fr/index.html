@@ -17,13 +17,14 @@
   <!-- Plotly -->
   <script src="https://cdn.plot.ly/plotly-2.34.0.min.js" charset="utf-8"></script>
   <script src="https://cdn.plot.ly/plotly-locale-fr-latest.js" charset="utf-8"></script>
+
   <!-- ArcGIS JS -->
   <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css"/>
   <script src="https://js.arcgis.com/4.30/"></script>
 
   <!-- App -->
   <link rel="stylesheet" href="/static/css/main.css"/>
-  <script src="/static/js/localization.en-US.js" async></script>
+  <script src="/static/js/localization.fr.js" async></script>
   <script src="/static/js/main.js" defer></script>
 
 </head>
@@ -107,20 +108,6 @@
     </div>
     <div style="width: 100%">
       <p>
-        GEOGLOWS est le programme Global Water Sustainability (GLOWS) du Group on Earth Observations (GEO).
-        Il est surtout connu pour un modèle hydrologique global qui portait de nombreux noms tels que GEOGLOWS ECMWF Streamflow Service, le modèle GEOGLOWS, ou parfois simplement GEOGLOWS.
-        La réutilisation du nom GEOGLOWS a conduit à une confusion entre le programme GEOGLOWS, le modèle hydrologique et ses produits.
-        Pour clarifier cela, nous introduisons le nom River Forecast System (RFS) pour faire référence spécifiquement au modèle hydrologique.
-        Veuillez utiliser le terme système de prévision fluviale (ou RFS en abrégé) ou « modèle hydrologique GEOGLOWS » lorsque vous faites référence au modèle hydrologique.
-      </p>
-      <p>
-        Le RFS est un modèle hydrologique physique couvrant l’ensemble du globe.
-        Elle propose deux produits principaux.
-        La première est une simulation rétrospective déterministe du débit moyen quotidien d'une rivière couvrant la période du 01/01/1940 jusqu'à environ une semaine de retard par rapport à aujourd'hui.
-        Deuxièmement, une prévision quotidienne du débit d’ensemble de la rivière sur 3 heures couvrant les 15 prochains jours.
-        De ces deux produits, il existe plusieurs dérivés tels que les cartes stylisées et animables que vous voyez dans cette application.
-      </p>
-      <p>
         Pour en savoir plus sur le projet GEOGLOWS, y compris des projets tels que le RFS, visitez <a href="https://www.geoglows.org" target="_blank">geoglows.org</a>.
       </p>
       <p>
@@ -139,9 +126,9 @@
     <div>
       <a class="btn dropdown-trigger" href="#" data-target="language-select"><i class="material-icons">translate</i></a>
       <ul id="language-select" class="dropdown-content">
-        <li><a href="#" data-lang="en-US">English</a></li>
+        <li><a href="/" data-lang="en-US">English</a></li>
         <li><a href="/es/" data-lang="es-ES">Español</a></li>
-        <li><a href="/fr/" data-lang="fr-FR">Français</a></li>
+        <li><a href="#" data-lang="fr-FR">Français</a></li>
       </ul>
       <a data-tooltip="View Charts" data-position="bottom" class="btn modal-trigger tooltipped" href="#charts-modal"><i class="material-icons">show_chart</i></a>
       <a data-tooltip="Learn More" data-position="bottom" class="btn modal-trigger tooltipped" href="#about-modal"><i class="material-icons">help</i></a>
