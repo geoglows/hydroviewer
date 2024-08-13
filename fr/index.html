@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>River Forecast System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="GEOGLOWS Hydroviwer">
+  <meta name="author" content="Riley Hales PhD">
+  <meta name="keywords" content="RFS, River Forecast System, Hydrology, Streamflow, Global, GEOGLOWS, Hydroviewer, Streamflow, Forecast, Retrospective">
+  <meta name="robots" content="index, follow">
+
+  <!-- CSS Framework -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+  <!-- Plotly -->
+  <script src="https://cdn.plot.ly/plotly-2.34.0.min.js" charset="utf-8"></script>
+  <script src="https://cdn.plot.ly/plotly-locale-fr-latest.js" charset="utf-8"></script>
+  <!-- ArcGIS JS -->
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css"/>
+  <script src="https://js.arcgis.com/4.30/"></script>
+
+  <!-- App -->
+  <link rel="stylesheet" href="/static/css/main.css"/>
+  <script src="/static/js/localization.en-US.js" async></script>
+  <script src="/static/js/main.js" defer></script>
+
+</head>
+<body>
+<div id="charts-modal" class="modal bottom-sheet">
+  <div class="modal-content" style="display: flex; flex-direction: column; align-items: center">
+    <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%">
+      <h4 style="margin: 0" class="hide-on-small-only">Débit<span id="river-name"></span></h4>
+      <button class="btn" role="button" onclick="setRiverId()">Entrez l'ID de la Rivière</button>
+      <input type="date" id="forecast-date-calendar" name="forecast-date-calendar" min="2024-07-01" onkeydown="return false" style="max-width: 150px;">
+    </div>
+    <div id="request-status" class="load-status"></div>
+    <div id="forecastPlot" class="chart"><h4>Entrez un identifiant de rivière ou utilisez la carte pour cliquer sur un ruisseau pour afficher les données de la rivière.</h4></div>
+    <div id="retroPlot" class="chart"></div>
+    <div class="download-buttons">
+      <button class="btn btn-success" id="download-forecast-btn" disabled><a id="download-forecast-link" target="_blank">Enregistrer les Données de Prévision (CSV)</a></button>
+      <button class="btn btn-success" id="download-retrospective-btn" disabled><a id="download-retrospective-link" target="_blank">Enregistrer les Données Rétrospectives(CSV)</a></button>
+    </div>
+  </div>
+  <div class="modal-footer" style="text-align: unset">
+    <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; justify-content: left;">
+        <label style="margin-inline: 10px">
+          <input id="auto-load-forecasts" type="checkbox" checked="checked"/>
+          <span>Afficher les Prévisions</span>
+        </label>
+        <label style="margin-inline: 10px">
+          <input id="auto-load-retrospective" type="checkbox" checked="checked"/>
+          <span>Afficher la Rétro<span class="hide-on-small-only">spective</span></span>
+        </label>
+      </div>
+      <a class="modal-close waves-effect waves-green btn-flat">Close</a>
+    </div>
+  </div>
+</div>
+<div id="filter-modal" class="modal bottom-sheet" style="height: 75%">
+  <div class="modal-content" style="display: flex; flex-direction: column; align-items: center">
+    <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%">
+      <h4>Filtrer les flux sur la carte</h4>
+    </div>
+    <div style="width: 100%">
+      <div>
+        <label for="outletCountry">Pays de sortie de la rivière</label>
+        <select id="outletCountry" class="browser default" multiple>
+          <option value="All" selected>All</option>
+        </select>
+      </div>
+      <div>
+        <label for="riverCountry">Pays Fluvial</label>
+        <select id="riverCountry" class="browser default" multiple>
+          <option value="All" selected>All</option>
+        </select>
+      </div>
+      <div>
+        <label for="vpuSelect">Numéro de VPU</label>
+        <select id="vpuSelect" class="browser default" multiple>
+          <option value="All" selected>All</option>
+        </select>
+      </div>
+      <div>
+        <label for="definitionString">Entrez des filtres SQL personnalisés (<a href="https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer/0">Visitez l’Atlas vivant d’Esri</a>
+          pour toutes les options d'attribut)</label>
+        <input type="text" id="definitionString" placeholder=""/>
+      </div>
+      <div>
+        <label for="definition-expression">Définition actuellement affichée</label>
+        <input type="text" id="definition-expression" disabled/>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" onclick="updateLayerDefinitions()">Appliquer des filtres</button>
+    <button class="btn btn-secondary" onclick="resetDefinitionExpression()">Effacer les filtres</button>
+    <a class="modal-close waves-effect waves-green btn-flat">Fermer</a>
+  </div>
+</div>
+<div id="about-modal" class="modal bottom-sheet" style="height: 75%">
+  <div class="modal-content" style="display: flex; flex-direction: column; align-items: center">
+    <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%">
+      <h4>À propos de GEOGLOWS</h4>
+    </div>
+    <div style="width: 100%">
+      <p>
+        GEOGLOWS est le programme Global Water Sustainability (GLOWS) du Group on Earth Observations (GEO).
+        Il est surtout connu pour un modèle hydrologique global qui portait de nombreux noms tels que GEOGLOWS ECMWF Streamflow Service, le modèle GEOGLOWS, ou parfois simplement GEOGLOWS.
+        La réutilisation du nom GEOGLOWS a conduit à une confusion entre le programme GEOGLOWS, le modèle hydrologique et ses produits.
+        Pour clarifier cela, nous introduisons le nom River Forecast System (RFS) pour faire référence spécifiquement au modèle hydrologique.
+        Veuillez utiliser le terme système de prévision fluviale (ou RFS en abrégé) ou « modèle hydrologique GEOGLOWS » lorsque vous faites référence au modèle hydrologique.
+      </p>
+      <p>
+        Le RFS est un modèle hydrologique physique couvrant l’ensemble du globe.
+        Elle propose deux produits principaux.
+        La première est une simulation rétrospective déterministe du débit moyen quotidien d'une rivière couvrant la période du 01/01/1940 jusqu'à environ une semaine de retard par rapport à aujourd'hui.
+        Deuxièmement, une prévision quotidienne du débit d’ensemble de la rivière sur 3 heures couvrant les 15 prochains jours.
+        De ces deux produits, il existe plusieurs dérivés tels que les cartes stylisées et animables que vous voyez dans cette application.
+      </p>
+      <p>
+        Pour en savoir plus sur le projet GEOGLOWS, y compris des projets tels que le RFS, visitez <a href="https://www.geoglows.org" target="_blank">geoglows.org</a>.
+      </p>
+      <p>
+        Les téléchargements de données et la documentation sont disponibles sur <a href="https://data.geoglows.org" target="_blank">data.geoglows.org</a>.
+      </p>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a class="modal-close waves-effect waves-green btn-flat">Fermer</a>
+  </div>
+</div>
+
+<div class="body-wrapper">
+  <div class="nav-bar-wrapper" style="background-color: #81d4fa">
+    <h4 style="font-size: 2rem; font-weight: bolder">GEOGLOWS</h4>
+    <div>
+      <a class="btn dropdown-trigger" href="#" data-target="language-select"><i class="material-icons">translate</i></a>
+      <ul id="language-select" class="dropdown-content">
+        <li><a href="#" data-lang="en-US">English</a></li>
+        <li><a href="/es/" data-lang="es-ES">Español</a></li>
+        <li><a href="/fr/" data-lang="fr-FR">Français</a></li>
+      </ul>
+      <a data-tooltip="View Charts" data-position="bottom" class="btn modal-trigger tooltipped" href="#charts-modal"><i class="material-icons">show_chart</i></a>
+      <a data-tooltip="Learn More" data-position="bottom" class="btn modal-trigger tooltipped" href="#about-modal"><i class="material-icons">help</i></a>
+    </div>
+  </div>
+  <div id="map" class="map"></div>
+</div>
+</body>
+</html>
