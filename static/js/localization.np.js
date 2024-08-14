@@ -1,45 +1,45 @@
 window.text = {
   "words": {
-    "riverid": "River ID",
-    "forecast": "Forecast",
-    "retro": "Retrospective",
-    "year": "year",
-    "years": "years",
-    "all": "All"
+    "riverid": "नदीको ID",
+    "forecast": "पूर्वानुमान",
+    "retro": "पूर्वव्यापी",
+    "year": "वर्ष",
+    "years": "वर्षहरू",
+    "all": "सबै"
   },
   "prompts": {
-    "mobile": "Swipe to pan. Pinch to Zoom. Tap to select rivers. Swipe this message to dismiss.",
-    "tryRiverAgain": "River not found. Try to zoom in and be precise when clicking the stream.",
-    "enterRiverID": "Please enter a valid 9 digit River ID.",
-    "invalidRiverID": "Error: River ID numbers should be 9 digit numbers.",
-    "findingRiver": "Identifying river segment. Charts will load soon."
+    "mobile": "प्यान गर्न स्वाइप गर्नुहोस्। जुम गर्न पिन्च गर्नुहोस्। नदीहरू चयन गर्न थिच्नुहोस्। यो सन्देश हटाउन स्वाइप गर्नुहोस्।",
+    "tryRiverAgain": "नदी फेला परेन। खोलामा थिच्र्दा जूम गरेर सोही ठाउँमा थिच्न प्रयास गर्नुहोस्।",
+    "enterRiverID": "कृपया ९ अंकको मान्य नदी ID प्रविष्ट गर्नुहोस्।",
+    "invalidRiverID": "त्रुटि: नदी ID नम्बरहरू ९ अंकको हुनुपर्छ।",
+    "findingRiver": "नदी खण्ड पहिचान गर्दैछ। चार्टहरू चाँडै लोड हुँदैछ,धैर्य धारण गर्नुहोस्।"
   },
   "status": {
-    "load": "Loading",
-    "ready": "Ready",
-    "fail": "Failed",
-    "clear": "none",
-    "unknown": "Unknown River Name"
+    "load": "लोड हुँदैछ",
+    "ready": "तयार",
+    "fail": "असफल",
+    "clear": "कुनै छैन",
+    "unknown": "अज्ञात नदी"
   },
   "tooltips": {
-    "home": "Go to Home",
-    "basemap": "Change Basemap",
-    "filter": "Filter Data",
-    "scale": "Scale Bar",
+    "home": "गृहपृष्ठमा जानुहोस्",
+    "basemap": "बेसम्याप परिवर्तन गर्नुहोस्",
+    "filter": "डेटा फिल्टर गर्नुहोस्",
+    "scale": "स्केल बार",
     "legend": "Legend"
   },
   "inputs": {
-    "forecast": "Show Forecast Plots",
-    "retro": "Show Retrospective Plots"
+    "forecast": "पूर्वानुमान प्लटहरू देखाउनुहोस्",
+    "retro": "पूर्वव्यापी प्लटहरू देखाउनुहोस्"
   },
   "plots": {
-    "fcTitle": "River Forecast for",
-    "fcXaxis": "Date",
-    "fcYaxis": "Discharge",
-    "fcLineUncertainty": "Uncertainty",
-    "fcLineMedian": "Predicted Flow",
-    "retroTitle": "Retrospective Flow for",
-    "retroXaxis": "Date",
-    "retroYaxis": "Discharge"
+    "fcTitle": "पूर्वानुमानको लागि नदी", //
+    "fcXaxis": "मिति", //
+    "fcYaxis": "प्रवाह", //
+    "fcLineUncertainty": "अनिश्चितता", //
+    "fcLineMedian": "अनुमानित प्रवाह", //
+    "retroTitle": "पूर्वव्यापी लागि नदी", //
+    "retroXaxis": "मिति", //
+    "retroYaxis": "प्रवाह" //
   }
 }
