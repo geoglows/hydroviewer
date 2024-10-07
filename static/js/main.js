@@ -31,9 +31,19 @@ require([
   const outletCountriesJSON = '../static/json/outletCountries.json'
   const vpuListJSON = '../static/json/vpuList.json'
 
+  // parse language from the url path
   const lang = (window.location.pathname.split("/").filter(x => x && !x.includes(".html") && !x.includes('viewer'))[0] || 'en-US');
   Plotly.setPlotConfig({'locale': lang})
   intl.setLocale(lang)
+
+  // parse initial state from the hash
+  const hashParams = new URLSearchParams(window.location.hash.slice(1))
+  const initialState = {
+    lon: parseFloat(hashParams.get('lon')) || 0,
+    lat: parseFloat(hashParams.get('lat')) || 10,
+    zoom: parseFloat(hashParams.get('zoom')) || 2,
+    definition: hashParams.get('definition') || "",
+  }
 
 //////////////////////////////////////////////////////////////////////// Element Selectors
   const checkboxLoadForecast = document.getElementById('auto-load-forecasts')
@@ -50,14 +60,6 @@ require([
   const modalFilter = document.getElementById("filter-modal")
   const chartForecast = document.getElementById("forecastPlot")
   const chartRetro = document.getElementById("retroPlot")
-
-//////////////////////////////////////////////////////////////////////// Materialize Initialization
-  M.AutoInit()
-
-// if on mobile, show a message with instructions. put the toast in the center of the screen vertically
-  if (window.innerWidth < 800) {
-    M.toast({html: text.prompts.mobile, classes: "blue custom-toast-placement", displayLength: 10000})
-  }
 
 //////////////////////////////////////////////////////////////////////// Manipulate Default Controls and DOM Elements
   let loadingStatus = {riverid: "clear", forecast: "clear", retro: "clear"}
@@ -121,8 +123,8 @@ require([
   const view = new MapView({
     container: "map",
     map: map,
-    zoom: 2,
-    center: [0, 15],
+    zoom: initialState.zoom,
+    center: [initialState.lon, initialState.lat],
     constraints: {
       rotationEnabled: false,
       snapToZoom: false,
@@ -228,7 +230,6 @@ require([
         fetchData(riverId)
       })
   }
-
   const buildDefinitionExpression = () => {
     const riverCountry = M.FormSelect.getInstance(selectRiverCountry).getSelectedValues()
     const outletCountry = M.FormSelect.getInstance(selectOutletCountry).getSelectedValues()
@@ -260,14 +261,12 @@ require([
     definitionExpression = definitions.join(" OR ")
     return definitionExpression
   }
-
-  const updateLayerDefinitions = () => {
-    definitionExpression = buildDefinitionExpression()
+  const updateLayerDefinitions = definitionExpression => {
+    definitionExpression = definitionExpression ? definitionExpression : buildDefinitionExpression()
     layer.findSublayerById(0).definitionExpression = definitionExpression
     definitionDiv.value = definitionExpression
     M.Modal.getInstance(modalFilter).close()
   }
-
   const resetDefinitionExpression = () => {
     // reset the selected values to All on each dropdown
     selectRiverCountry.value = "All"
@@ -294,7 +293,6 @@ require([
     checkboxLoadForecast.checked ? getForecastData() : giveForecastRetryButton(riverId)
     checkboxLoadRetro.checked ? getRetrospectiveData() : giveRetrospectiveRetryButton(riverId)
   }
-
   const setRiverId = () => {
     riverId = prompt(text.prompts.enterRiverID)
     if (!riverId) return
@@ -317,7 +315,7 @@ require([
     }
   }
 
-////////////////////////////////////////////////////////////////////////  GET DATA FROM API AND MANAGING PLOTS
+//////////////////////////////////////////////////////////////////////// GET DATA FROM API AND MANAGING PLOTS
   const getForecastData = riverid => {
     riverId = riverid ? riverid : riverId
     if (!riverId) return
@@ -373,7 +371,6 @@ require([
         giveForecastRetryButton(riverId)
       })
   }
-
   const getRetrospectiveData = () => {
     if (!riverId) return
     updateStatusIcons({retro: "load"})
@@ -486,6 +483,39 @@ require([
     chartRetro.innerHTML = `<button class="btn btn-warning" onclick="window.getRetrospectiveData(${riverid})">${text.inputs.forecast}</button>`
   }
 
+//////////////////////////////////////////////////////////////////////// HASH UPDATES
+  const updateHash = () => {
+    const hashParams = new URLSearchParams(window.location.hash.slice(1))
+    hashParams.set('lon', view.center.longitude.toFixed(2))
+    hashParams.set('lat', view.center.latitude.toFixed(2))
+    hashParams.set('zoom', view.zoom.toFixed(2))
+    hashParams.set('definition', definitionExpression)
+    window.location.hash = hashParams.toString()
+  }
+  const updateMapFromHash = () => {
+    const hashParams = new URLSearchParams(window.location.hash.slice(1))
+    view.center = [parseFloat(hashParams.get('lon')) || view.center.longitude, parseFloat(hashParams.get('lat')) || view.center.latitude]
+    view.zoom = parseFloat(hashParams.get('zoom')) || view.zoom
+    updateLayerDefinitions(hashParams.get('definition'))
+
+  }
+
+//////////////////////////////////////////////////////////////////////// INITIAL LOAD
+  if (initialState.definition) {
+    selectRiverCountry.value = null
+    selectOutletCountry.value = null
+    selectVPU.value = null
+    definitionString.value = initialState.definition
+  }
+  M.AutoInit()
+  if (initialState.definition) {
+    updateLayerDefinitions(initialState.definition)
+  }
+  // if on mobile, show a message with instructions. put the toast in the center of the screen vertically
+  if (window.innerWidth < 800) {
+    M.toast({html: text.prompts.mobile, classes: "blue custom-toast-placement", displayLength: 10000})
+  }
+
 //////////////////////////////////////////////////////////////////////// Event Listeners
   inputForecastDate.addEventListener("change", () => getForecastData())
   window.addEventListener('resize', () => {
@@ -499,6 +529,8 @@ require([
     queryLayerForName(event)
     queryLayerForID(event)
   })
+  view.watch('extent', () => updateHash())
+  window.addEventListener('hashchange', () => updateMapFromHash())
 
 //////////////////////////////////////////////////////////////////////// Export alternatives
   window.setRiverId = setRiverId
