@@ -38,10 +38,13 @@ require([
 
   // parse initial state from the hash
   const hashParams = new URLSearchParams(window.location.hash.slice(1))
+  let lon = !isNaN(parseFloat(hashParams.get('lon'))) ? parseFloat(hashParams.get('lon')) : 0
+  let lat = !isNaN(parseFloat(hashParams.get('lat'))) ? parseFloat(hashParams.get('lat')) : 10
+  let zoom = !isNaN(parseFloat(hashParams.get('zoom'))) ? parseFloat(hashParams.get('zoom')) : 2
   const initialState = {
-    lon: parseFloat(hashParams.get('lon')) || 0,
-    lat: parseFloat(hashParams.get('lat')) || 10,
-    zoom: parseFloat(hashParams.get('zoom')) || 2,
+    lon: lon,
+    lat: lat,
+    zoom: zoom,
     definition: hashParams.get('definition') || "",
   }
 
@@ -261,11 +264,13 @@ require([
     definitionExpression = definitions.join(" OR ")
     return definitionExpression
   }
-  const updateLayerDefinitions = definitionExpression => {
-    definitionExpression = definitionExpression ? definitionExpression : buildDefinitionExpression()
-    layer.findSublayerById(0).definitionExpression = definitionExpression
+  const updateLayerDefinitions = expression => {
+    expression = expression === null ? buildDefinitionExpression() : expression
+    layer.findSublayerById(0).definitionExpression = expression
+    definitionExpression = expression
     definitionDiv.value = definitionExpression
     M.Modal.getInstance(modalFilter).close()
+    setHashDefinition(definitionExpression)
   }
   const resetDefinitionExpression = () => {
     // reset the selected values to All on each dropdown
@@ -492,12 +497,25 @@ require([
     hashParams.set('definition', definitionExpression)
     window.location.hash = hashParams.toString()
   }
-  const updateMapFromHash = () => {
+  const updateAppFromHash = () => {
     const hashParams = new URLSearchParams(window.location.hash.slice(1))
-    view.center = [parseFloat(hashParams.get('lon')) || view.center.longitude, parseFloat(hashParams.get('lat')) || view.center.latitude]
-    view.zoom = parseFloat(hashParams.get('zoom')) || view.zoom
-    updateLayerDefinitions(hashParams.get('definition'))
-
+    let lon = !isNaN(parseFloat(hashParams.get('lon'))) ? parseFloat(hashParams.get('lon')) : view.center.longitude
+    let lat = !isNaN(parseFloat(hashParams.get('lat'))) ? parseFloat(hashParams.get('lat')) : view.center.latitude
+    let zoom = !isNaN(parseFloat(hashParams.get('zoom'))) ? parseFloat(hashParams.get('zoom')) : view.zoom
+    lon = lon.toFixed(2)
+    lat = lat.toFixed(2)
+    zoom = zoom.toFixed(2)
+    view.center = [lon, lat]
+    view.zoom = zoom
+    if (!hashParams.get('definition')) updateLayerDefinitions("")
+    if (hashParams.get('definition') !== definitionExpression) {
+      updateLayerDefinitions(hashParams.get('definition'))
+    }
+  }
+  const setHashDefinition = definition => {
+    const hashParams = new URLSearchParams(window.location.hash.slice(1))
+    hashParams.set('definition', definition)
+    window.location.hash = hashParams.toString()
   }
 
 //////////////////////////////////////////////////////////////////////// INITIAL LOAD
@@ -530,7 +548,7 @@ require([
     queryLayerForID(event)
   })
   view.watch('extent', () => updateHash())
-  window.addEventListener('hashchange', () => updateMapFromHash())
+  window.addEventListener('hashchange', () => updateAppFromHash())
 
 //////////////////////////////////////////////////////////////////////// Export alternatives
   window.setRiverId = setRiverId
