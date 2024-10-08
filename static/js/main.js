@@ -117,7 +117,6 @@ require([
     'asia': new FeatureLayer({url: OSM_WATERWAYS_AS}),
     'australia': new FeatureLayer({url: OSM_WATERWAYS_AU}),
   }
-// don't let people pan outside the world
   const map = new Map({
     basemap: "dark-gray-vector",
     layers: [layer],
@@ -137,7 +136,7 @@ require([
   const homeBtn = new Home({
     view: view
   });
-  let basemapGallery = new BasemapGallery({
+  const basemapGallery = new BasemapGallery({
     view: view
   });
   const scaleBar = new ScaleBar({
@@ -147,7 +146,6 @@ require([
   const legend = new Legend({
     view: view
   });
-
   const legendExpand = new Expand({
     view: view,
     content: legend,
@@ -238,45 +236,29 @@ require([
     const outletCountry = M.FormSelect.getInstance(selectOutletCountry).getSelectedValues()
     const vpu = M.FormSelect.getInstance(selectVPU).getSelectedValues()
     const customString = definitionString.value
-    if (
-      riverCountry.length === 1 &&
-      riverCountry[0] === "All" &&
-      outletCountry.length === 1 &&
-      outletCountry[0] === "All" &&
-      vpu.length === 1 &&
-      vpu[0] === "All" &&
-      customString === ""
-    ) return M.Modal.getInstance(modalFilter).close()
+    if (!riverCountry.length && !outletCountry.length && !vpu.length && customString === "") return M.Modal.getInstance(modalFilter).close()
 
     let definitions = []
-    if (riverCountry !== "All") {
-      riverCountry.forEach(c => c === 'All' ? null : definitions.push(`rivercountry = '${c}'`))
-    }
-    if (outletCountry !== "All") {
-      outletCountry.forEach(c => c === 'All' ? null : definitions.push(`outletcountry = '${c}'`))
-    }
-    if (vpu !== "All") {
-      vpu.forEach(v => v === 'All' ? null : definitions.push(`vpu = ${v}`))
-    }
-    if (customString !== "") {
-      definitions.push(customString)
-    }
+    if (riverCountry.length) riverCountry.forEach(c => definitions.push(`rivercountry='${c}'`))
+    if (outletCountry.length) outletCountry.forEach(c => definitions.push(`outletcountry='${c}'`))
+    if (vpu.length) vpu.forEach(v => definitions.push(`vpu=${v}`))
+    if (customString !== "") definitions.push(customString)
     definitionExpression = definitions.join(" OR ")
     return definitionExpression
   }
   const updateLayerDefinitions = expression => {
-    expression = expression === null ? buildDefinitionExpression() : expression
+    expression = expression === undefined ? buildDefinitionExpression() : expression
     layer.findSublayerById(0).definitionExpression = expression
     definitionExpression = expression
-    definitionDiv.value = definitionExpression
+    definitionDiv.value = expression
     M.Modal.getInstance(modalFilter).close()
-    setHashDefinition(definitionExpression)
+    setHashDefinition(expression)
   }
   const resetDefinitionExpression = () => {
     // reset the selected values to All on each dropdown
-    selectRiverCountry.value = "All"
-    selectOutletCountry.value = "All"
-    selectVPU.value = "All"
+    selectRiverCountry.value = ""
+    selectOutletCountry.value = ""
+    selectVPU.value = ""
     M.FormSelect.init(selectRiverCountry)
     M.FormSelect.init(selectOutletCountry)
     M.FormSelect.init(selectVPU)
@@ -285,6 +267,8 @@ require([
     definitionExpression = ""
     layer.findSublayerById(0).definitionExpression = definitionExpression
     definitionDiv.value = definitionExpression
+    // update the hash
+    setHashDefinition(definitionExpression)
   }
 
 //////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
@@ -507,10 +491,8 @@ require([
     zoom = zoom.toFixed(2)
     view.center = [lon, lat]
     view.zoom = zoom
-    if (!hashParams.get('definition')) updateLayerDefinitions("")
-    if (hashParams.get('definition') !== definitionExpression) {
-      updateLayerDefinitions(hashParams.get('definition'))
-    }
+    if (hashParams.get('definition') === definitionExpression) return
+    updateLayerDefinitions(hashParams.get('definition'))
   }
   const setHashDefinition = definition => {
     const hashParams = new URLSearchParams(window.location.hash.slice(1))
@@ -519,20 +501,9 @@ require([
   }
 
 //////////////////////////////////////////////////////////////////////// INITIAL LOAD
-  if (initialState.definition) {
-    selectRiverCountry.value = null
-    selectOutletCountry.value = null
-    selectVPU.value = null
-    definitionString.value = initialState.definition
-  }
   M.AutoInit()
-  if (initialState.definition) {
-    updateLayerDefinitions(initialState.definition)
-  }
-  // if on mobile, show a message with instructions. put the toast in the center of the screen vertically
-  if (window.innerWidth < 800) {
-    M.toast({html: text.prompts.mobile, classes: "blue custom-toast-placement", displayLength: 10000})
-  }
+  if (initialState.definition) updateLayerDefinitions(initialState.definition)
+  if (window.innerWidth < 800) M.toast({html: text.prompts.mobile, classes: "blue custom-toast-placement", displayLength: 8000})
 
 //////////////////////////////////////////////////////////////////////// Event Listeners
   inputForecastDate.addEventListener("change", () => getForecastData())
