@@ -1,7 +1,9 @@
 require([
   "esri/Map",
+  "esri/WebMap",
   "esri/views/MapView",
   "esri/layers/MapImageLayer",
+  "esri/layers/VectorTileLayer",
   "esri/layers/FeatureLayer",
   "esri/widgets/Home",
   "esri/widgets/BasemapGallery",
@@ -9,7 +11,7 @@ require([
   "esri/widgets/Legend",
   "esri/widgets/Expand",
   "esri/intl",
-], (Map, MapView, MapImageLayer, FeatureLayer, Home, BasemapGallery, ScaleBar, Legend, Expand, intl) => {
+], (Map, WebMap, MapView, MapImageLayer, VectorTileLayer, FeatureLayer, Home, BasemapGallery, ScaleBar, Legend, Expand, intl) => {
   'use strict'
 
 //////////////////////////////////////////////////////////////////////// Constants Variables
@@ -38,9 +40,9 @@ require([
 
   // parse initial state from the hash
   const hashParams = new URLSearchParams(window.location.hash.slice(1))
-  let lon = !isNaN(parseFloat(hashParams.get('lon'))) ? parseFloat(hashParams.get('lon')) : 0
-  let lat = !isNaN(parseFloat(hashParams.get('lat'))) ? parseFloat(hashParams.get('lat')) : 10
-  let zoom = !isNaN(parseFloat(hashParams.get('zoom'))) ? parseFloat(hashParams.get('zoom')) : 2
+  let lon = !isNaN(parseFloat(hashParams.get('lon'))) ? parseFloat(hashParams.get('lon')) : 10
+  let lat = !isNaN(parseFloat(hashParams.get('lat'))) ? parseFloat(hashParams.get('lat')) : 18
+  let zoom = !isNaN(parseFloat(hashParams.get('zoom'))) ? parseFloat(hashParams.get('zoom')) : 2.75
   const initialState = {
     lon: lon,
     lat: lat,
@@ -117,11 +119,39 @@ require([
     'asia': new FeatureLayer({url: OSM_WATERWAYS_AS}),
     'australia': new FeatureLayer({url: OSM_WATERWAYS_AU}),
   }
+  // add a layer for several basemap components
+  // envbase vector tile layer 005b8960ddd04ae781df8d471b6726b3 https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer
+  // 6d188135dc814d4ea254440a3dd844df
+  // 8b8862d9cc894f5db44231a67ee0e41b
+  // https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer
+
+  const hillshade = new MapImageLayer({
+    url: "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
+    title: "Hillshade",
+    visible: true,
+    opacity: 1
+  })
+  // https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer
+  const envBase = new VectorTileLayer({
+    url: "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+    title: "Environment Basemap",
+    visible: true,
+    opacity: 1
+  })
+
+
   const map = new Map({
-    basemap: "dark-gray-vector",
-    layers: [layer],
+    layers: [layer, hillshade, envBase],
     spatialReference: {wkid: 102100},
   })
+  // const map = new WebMap({
+  //   portalItem: {id: "a69f14ea2e784e019f4a4b6835ffd376"},
+  //   layers: [layer],
+  //   spatialReference: {wkid: 102100}
+  // });
+  // map.when(() => {
+  //   console.log(map.layers)
+  // })
   const view = new MapView({
     container: "map",
     map: map,
@@ -136,9 +166,9 @@ require([
   const homeBtn = new Home({
     view: view
   });
-  const basemapGallery = new BasemapGallery({
-    view: view
-  });
+  // const basemapGallery = new BasemapGallery({
+  //   view: view
+  // });
   const scaleBar = new ScaleBar({
     view: view,
     unit: "dual"
@@ -152,12 +182,12 @@ require([
     expandTooltip: text.tooltips.legend,
     expanded: false
   });
-  const basemapExpand = new Expand({
-    view: view,
-    content: basemapGallery,
-    expandTooltip: text.tooltips.basemap,
-    expanded: false
-  });
+  // const basemapExpand = new Expand({
+  //   view: view,
+  //   content: basemapGallery,
+  //   expandTooltip: text.tooltips.basemap,
+  //   expanded: false
+  // });
 
   const filterButton = document.createElement('div');
   filterButton.className = "esri-widget--button esri-widget esri-interactive";
@@ -165,7 +195,7 @@ require([
   filterButton.addEventListener('click', () => M.Modal.getInstance(modalFilter).open());
 
   view.ui.add(homeBtn, "top-left");
-  view.ui.add(basemapExpand, "top-right")
+  // view.ui.add(basemapExpand, "top-right")
   view.ui.add(filterButton, "top-left");
   view.ui.add(scaleBar, "bottom-right");
   view.ui.add(legendExpand, "bottom-left");
