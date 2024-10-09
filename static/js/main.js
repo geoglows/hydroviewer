@@ -5,13 +5,14 @@ require([
   "esri/layers/MapImageLayer",
   "esri/layers/VectorTileLayer",
   "esri/layers/FeatureLayer",
+  "esri/layers/GroupLayer",
   "esri/widgets/Home",
   "esri/widgets/BasemapGallery",
   "esri/widgets/ScaleBar",
   "esri/widgets/Legend",
   "esri/widgets/Expand",
   "esri/intl",
-], (Map, WebMap, MapView, MapImageLayer, VectorTileLayer, FeatureLayer, Home, BasemapGallery, ScaleBar, Legend, Expand, intl) => {
+], (Map, WebMap, MapView, MapImageLayer, VectorTileLayer, FeatureLayer, GroupLayer, Home, BasemapGallery, ScaleBar, Legend, Expand, intl) => {
   'use strict'
 
 //////////////////////////////////////////////////////////////////////// Constants Variables
@@ -60,7 +61,6 @@ require([
   const selectVPU = document.getElementById('vpuSelect')
   const definitionString = document.getElementById("definitionString")
   const definitionDiv = document.getElementById("definition-expression")
-
   const modalCharts = document.getElementById("charts-modal")
   const modalFilter = document.getElementById("filter-modal")
   const chartForecast = document.getElementById("forecastPlot")
@@ -119,39 +119,46 @@ require([
     'asia': new FeatureLayer({url: OSM_WATERWAYS_AS}),
     'australia': new FeatureLayer({url: OSM_WATERWAYS_AU}),
   }
-  // add a layer for several basemap components
-  // envbase vector tile layer 005b8960ddd04ae781df8d471b6726b3 https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer
-  // 6d188135dc814d4ea254440a3dd844df
-  // 8b8862d9cc894f5db44231a67ee0e41b
-  // https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer
-
   const hillshade = new MapImageLayer({
     url: "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
     title: "Hillshade",
     visible: true,
     opacity: 1
   })
-  // https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer
   const envBase = new VectorTileLayer({
-    url: "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+    portalItem: {id: "005b8960ddd04ae781df8d471b6726b3"},
     title: "Environment Basemap",
     visible: true,
     opacity: 1
   })
-
+  const envWatersheds = new VectorTileLayer({
+    portalItem: {id: "3bfd1065c1a748c5ae2f9408c3fb1078"},
+    title: "HydroSHEDS Major Watersheds",
+    visible: true,
+    opacity: 1
+  })
+  const envSurfaceWaterAndLabels = new VectorTileLayer({
+    portalItem: {id: "6d188135dc814d4ea254440a3dd844df"},
+    title: "Surface Water and Labels",
+    visible: true,
+    opacity: 1
+  })
+  const envDetailsAndLabel = new VectorTileLayer({
+    portalItem: {id: "8b8862d9cc894f5db44231a67ee0e41b"},
+    title: "Topographic Details and Labels",
+    visible: true,
+    opacity: 1
+  })
+  const envMapGroup = new GroupLayer({
+    title: "Environment",
+    visible: true,
+    layers: [envBase, envWatersheds, envSurfaceWaterAndLabels, ],
+  })
 
   const map = new Map({
-    layers: [layer, hillshade, envBase],
+    layers: [envMapGroup, layer, envDetailsAndLabel],
     spatialReference: {wkid: 102100},
   })
-  // const map = new WebMap({
-  //   portalItem: {id: "a69f14ea2e784e019f4a4b6835ffd376"},
-  //   layers: [layer],
-  //   spatialReference: {wkid: 102100}
-  // });
-  // map.when(() => {
-  //   console.log(map.layers)
-  // })
   const view = new MapView({
     container: "map",
     map: map,
@@ -166,15 +173,19 @@ require([
   const homeBtn = new Home({
     view: view
   });
-  // const basemapGallery = new BasemapGallery({
-  //   view: view
-  // });
   const scaleBar = new ScaleBar({
     view: view,
     unit: "dual"
   });
   const legend = new Legend({
-    view: view
+    view: view,
+    layerInfos: [
+      {layer: hillshade, title: "Hillshade"},
+      {layer: envBase, title: "Environment Basemap"},
+      {layer: envWatersheds, title: "HydroSHEDS Major Watersheds"},
+      {layer: envSurfaceWaterAndLabels, title: "Surface Water and Labels"},
+      {layer: envDetailsAndLabel, title: "Topographic Details and Labels"}
+    ]
   });
   const legendExpand = new Expand({
     view: view,
@@ -182,12 +193,16 @@ require([
     expandTooltip: text.tooltips.legend,
     expanded: false
   });
-  // const basemapExpand = new Expand({
-  //   view: view,
-  //   content: basemapGallery,
-  //   expandTooltip: text.tooltips.basemap,
-  //   expanded: false
-  // });
+  const basemapGallery = new BasemapGallery({
+    view: view
+  });
+  const basemapExpand = new Expand({
+    view: view,
+    content: basemapGallery,
+    expandTooltip: text.tooltips.basemap,
+    expanded: false
+  });
+  // make the first entry in the basemap gallery the default basemap
 
   const filterButton = document.createElement('div');
   filterButton.className = "esri-widget--button esri-widget esri-interactive";
@@ -195,7 +210,7 @@ require([
   filterButton.addEventListener('click', () => M.Modal.getInstance(modalFilter).open());
 
   view.ui.add(homeBtn, "top-left");
-  // view.ui.add(basemapExpand, "top-right")
+  view.ui.add(basemapExpand, "top-right")
   view.ui.add(filterButton, "top-left");
   view.ui.add(scaleBar, "bottom-right");
   view.ui.add(legendExpand, "bottom-left");
