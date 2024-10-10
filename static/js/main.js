@@ -1,15 +1,18 @@
 require([
   "esri/Map",
+  "esri/WebMap",
   "esri/views/MapView",
   "esri/layers/MapImageLayer",
+  "esri/layers/VectorTileLayer",
   "esri/layers/FeatureLayer",
+  "esri/layers/GroupLayer",
   "esri/widgets/Home",
   "esri/widgets/BasemapGallery",
   "esri/widgets/ScaleBar",
   "esri/widgets/Legend",
   "esri/widgets/Expand",
   "esri/intl",
-], (Map, MapView, MapImageLayer, FeatureLayer, Home, BasemapGallery, ScaleBar, Legend, Expand, intl) => {
+], (Map, WebMap, MapView, MapImageLayer, VectorTileLayer, FeatureLayer, GroupLayer, Home, BasemapGallery, ScaleBar, Legend, Expand, intl) => {
   'use strict'
 
 //////////////////////////////////////////////////////////////////////// Constants Variables
@@ -31,6 +34,12 @@ require([
   const outletCountriesJSON = '../static/json/outletCountries.json'
   const vpuListJSON = '../static/json/vpuList.json'
 
+  const defaultView = {
+    zoom: 2,
+    lon: 12,
+    lat: 10,
+  }
+
   // parse language from the url path
   const lang = (window.location.pathname.split("/").filter(x => x && !x.includes(".html") && !x.includes('viewer'))[0] || 'en-US');
   Plotly.setPlotConfig({'locale': lang})
@@ -38,9 +47,9 @@ require([
 
   // parse initial state from the hash
   const hashParams = new URLSearchParams(window.location.hash.slice(1))
-  let lon = !isNaN(parseFloat(hashParams.get('lon'))) ? parseFloat(hashParams.get('lon')) : 0
-  let lat = !isNaN(parseFloat(hashParams.get('lat'))) ? parseFloat(hashParams.get('lat')) : 10
-  let zoom = !isNaN(parseFloat(hashParams.get('zoom'))) ? parseFloat(hashParams.get('zoom')) : 2
+  let lon = !isNaN(parseFloat(hashParams.get('lon'))) ? parseFloat(hashParams.get('lon')) : defaultView.lon
+  let lat = !isNaN(parseFloat(hashParams.get('lat'))) ? parseFloat(hashParams.get('lat')) : defaultView.lat
+  let zoom = !isNaN(parseFloat(hashParams.get('zoom'))) ? parseFloat(hashParams.get('zoom')) : defaultView.zoom
   const initialState = {
     lon: lon,
     lat: lat,
@@ -58,7 +67,6 @@ require([
   const selectVPU = document.getElementById('vpuSelect')
   const definitionString = document.getElementById("definitionString")
   const definitionDiv = document.getElementById("definition-expression")
-
   const modalCharts = document.getElementById("charts-modal")
   const modalFilter = document.getElementById("filter-modal")
   const chartForecast = document.getElementById("forecastPlot")
@@ -117,9 +125,15 @@ require([
     'asia': new FeatureLayer({url: OSM_WATERWAYS_AS}),
     'australia': new FeatureLayer({url: OSM_WATERWAYS_AU}),
   }
+  const envWatersheds = new VectorTileLayer({
+    portalItem: {id: "3bfd1065c1a748c5ae2f9408c3fb1078"},
+    title: "HydroSHEDS Major Watersheds",
+    visible: true,
+    opacity: 1
+  })
   const map = new Map({
-    basemap: "dark-gray-vector",
-    layers: [layer],
+    basemap: "gray-vector",
+    layers: [envWatersheds, layer],
     spatialReference: {wkid: 102100},
   })
   const view = new MapView({
@@ -130,13 +144,10 @@ require([
     constraints: {
       rotationEnabled: false,
       snapToZoom: false,
-      minZoom: 0,
+      minZoom: 2,
     },
   })
   const homeBtn = new Home({
-    view: view
-  });
-  const basemapGallery = new BasemapGallery({
     view: view
   });
   const scaleBar = new ScaleBar({
@@ -151,6 +162,9 @@ require([
     content: legend,
     expandTooltip: text.tooltips.legend,
     expanded: false
+  });
+  const basemapGallery = new BasemapGallery({
+    view: view
   });
   const basemapExpand = new Expand({
     view: view,
@@ -255,7 +269,6 @@ require([
     setHashDefinition(expression)
   }
   const resetDefinitionExpression = () => {
-    // reset the selected values to All on each dropdown
     selectRiverCountry.value = ""
     selectOutletCountry.value = ""
     selectVPU.value = ""
@@ -263,11 +276,9 @@ require([
     M.FormSelect.init(selectOutletCountry)
     M.FormSelect.init(selectVPU)
     definitionString.value = ""
-    // reset the definition expression to empty
     definitionExpression = ""
     layer.findSublayerById(0).definitionExpression = definitionExpression
     definitionDiv.value = definitionExpression
-    // update the hash
     setHashDefinition(definitionExpression)
   }
 
@@ -483,16 +494,20 @@ require([
   }
   const updateAppFromHash = () => {
     const hashParams = new URLSearchParams(window.location.hash.slice(1))
-    let lon = !isNaN(parseFloat(hashParams.get('lon'))) ? parseFloat(hashParams.get('lon')) : view.center.longitude
-    let lat = !isNaN(parseFloat(hashParams.get('lat'))) ? parseFloat(hashParams.get('lat')) : view.center.latitude
-    let zoom = !isNaN(parseFloat(hashParams.get('zoom'))) ? parseFloat(hashParams.get('zoom')) : view.zoom
+    let lon = !isNaN(parseFloat(hashParams.get('lon'))) ? parseFloat(hashParams.get('lon')) : defaultView.lon
+    let lat = !isNaN(parseFloat(hashParams.get('lat'))) ? parseFloat(hashParams.get('lat')) : defaultView.lat
+    let zoom = !isNaN(parseFloat(hashParams.get('zoom'))) ? parseFloat(hashParams.get('zoom')) : defaultView.zoom
     lon = lon.toFixed(2)
     lat = lat.toFixed(2)
     zoom = zoom.toFixed(2)
     view.center = [lon, lat]
     view.zoom = zoom
-    if (hashParams.get('definition') === definitionExpression) return
-    updateLayerDefinitions(hashParams.get('definition'))
+    let definition = hashParams.get('definition')
+    if (!definition || definition === "null" || definition === "undefined" || definition === "[object Object]") {
+      resetDefinitionExpression()
+      definition = ""
+    }
+    updateLayerDefinitions(definition)
   }
   const setHashDefinition = definition => {
     const hashParams = new URLSearchParams(window.location.hash.slice(1))
@@ -518,7 +533,7 @@ require([
     queryLayerForName(event)
     queryLayerForID(event)
   })
-  view.watch('extent', () => updateHash())
+  view.watch('stationary', () => updateHash())
   window.addEventListener('hashchange', () => updateAppFromHash())
 
 //////////////////////////////////////////////////////////////////////// Export alternatives
