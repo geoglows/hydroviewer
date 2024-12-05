@@ -1,15 +1,19 @@
 require([
-  "esri/Map",
+  "esri/WebMap",
   "esri/views/MapView",
   "esri/layers/MapImageLayer",
+  "esri/layers/ImageryLayer",
+  "esri/layers/TileLayer",
+  "esri/layers/WebTileLayer",
   "esri/layers/FeatureLayer",
   "esri/widgets/Home",
   "esri/widgets/BasemapGallery",
   "esri/widgets/ScaleBar",
   "esri/widgets/Legend",
   "esri/widgets/Expand",
+  "esri/widgets/LayerList",
   "esri/intl",
-], (Map, MapView, MapImageLayer, FeatureLayer, Home, BasemapGallery, ScaleBar, Legend, Expand, intl) => {
+], (WebMap, MapView, MapImageLayer, ImageryLayer, TileLayer, WebTileLayer, FeatureLayer, Home, BasemapGallery, ScaleBar, Legend, Expand, LayerList, intl) => {
   'use strict'
 
 //////////////////////////////////////////////////////////////////////// Constants Variables
@@ -38,9 +42,9 @@ require([
 
   // parse initial state from the hash
   const hashParams = new URLSearchParams(window.location.hash.slice(1))
-  let lon = !isNaN(parseFloat(hashParams.get('lon'))) ? parseFloat(hashParams.get('lon')) : 0
-  let lat = !isNaN(parseFloat(hashParams.get('lat'))) ? parseFloat(hashParams.get('lat')) : 10
-  let zoom = !isNaN(parseFloat(hashParams.get('zoom'))) ? parseFloat(hashParams.get('zoom')) : 2
+  let lon = !isNaN(parseFloat(hashParams.get('lon'))) ? parseFloat(hashParams.get('lon')) : 10
+  let lat = !isNaN(parseFloat(hashParams.get('lat'))) ? parseFloat(hashParams.get('lat')) : 18
+  let zoom = !isNaN(parseFloat(hashParams.get('zoom'))) ? parseFloat(hashParams.get('zoom')) : 2.75
   const initialState = {
     lon: lon,
     lat: lat,
@@ -58,7 +62,6 @@ require([
   const selectVPU = document.getElementById('vpuSelect')
   const definitionString = document.getElementById("definitionString")
   const definitionDiv = document.getElementById("definition-expression")
-
   const modalCharts = document.getElementById("charts-modal")
   const modalFilter = document.getElementById("filter-modal")
   const chartForecast = document.getElementById("forecastPlot")
@@ -97,16 +100,42 @@ require([
     )
 
 ////////////////////////////////////////////////////////////////////////  Create Layer, Map, View
-  const layer = new MapImageLayer({
+  const rfsLayer = new MapImageLayer({
     url: ESRI_LAYER_URL,
-    sublayers: [
-      {
-        id: 0,
-        visible: true,
-        definitionExpression: definitionExpression,
-      }
-    ]
+    title: "GEOGLOWS River Forecast System v2",
+    sublayers: [{
+      id: 0,
+      definitionExpression: definitionExpression,
+    }]
   })
+
+  const viirsFloodClassified = new WebTileLayer({
+    urlTemplate: "https://floods.ssec.wisc.edu/tiles/RIVER-FLDglobal-composite/{level}/{col}/{row}.png",
+    title: "NOAA-20 VIIRS Flood Composite",
+    copyright: "University of Wisconsin-Madison SSEC",
+    visible: false,
+  });
+  const viirsTrueColor = new ImageryLayer({
+    portalItem: {id: "c873f4c13aa54b25b01270df9358dc64"},
+    title: "NOAA-20 VIIRS True Color Corrected Reflectance",
+    visible: false,
+  })
+  const viirsWaterStates = new ImageryLayer({
+    portalItem: {id: "3695712d28354952923d2a26a176b767"},
+    title: "NOAA-20 VIIRS Water States",
+    visible: false,
+  })
+  const viirsThermalAnomalies = new FeatureLayer({
+    portalItem: {id: "dece90af1a0242dcbf0ca36d30276aa3"},
+    title: "NOAA-20 VIIRS Thermal Anomalies",
+    visible: false,
+  })
+  const goesImageryColorized = new TileLayer({
+    portalItem: {id: "37a875ff3611496883b7ccca97f0f5f4"},
+    title: "GOES Weather Satellite Colorized Infrared Imagery",
+    visible: false,
+  })
+
   const regionsLayer = new FeatureLayer({url: OSM_REGIONS_URL})
   const waterwaysLayers = {
     'north-america': new FeatureLayer({url: OSM_WATERWAYS_NA}),
@@ -117,10 +146,12 @@ require([
     'asia': new FeatureLayer({url: OSM_WATERWAYS_AS}),
     'australia': new FeatureLayer({url: OSM_WATERWAYS_AU}),
   }
-  const map = new Map({
-    basemap: "dark-gray-vector",
-    layers: [layer],
+
+  const map = new WebMap({
+    portalItem: {id: "a69f14ea2e784e019f4a4b6835ffd376"},
+    title: "Environment Basemap",
     spatialReference: {wkid: 102100},
+    legendEnabled: true,
   })
   const view = new MapView({
     container: "map",
@@ -135,29 +166,38 @@ require([
   })
   const homeBtn = new Home({
     view: view
-  });
-  const basemapGallery = new BasemapGallery({
-    view: view
-  });
+  })
   const scaleBar = new ScaleBar({
     view: view,
     unit: "dual"
-  });
+  })
   const legend = new Legend({
     view: view
-  });
+  })
   const legendExpand = new Expand({
     view: view,
     content: legend,
     expandTooltip: text.tooltips.legend,
     expanded: false
-  });
+  })
+  const basemapGallery = new BasemapGallery({
+    view: view
+  })
   const basemapExpand = new Expand({
     view: view,
     content: basemapGallery,
     expandTooltip: text.tooltips.basemap,
     expanded: false
-  });
+  })
+  const layerList = new LayerList({
+    view: view
+  })
+  const layerListExpand = new Expand({
+    view: view,
+    content: layerList,
+    expandTooltip: text.tooltips.layerList,
+    expanded: false
+  })
 
   const filterButton = document.createElement('div');
   filterButton.className = "esri-widget--button esri-widget esri-interactive";
@@ -165,11 +205,20 @@ require([
   filterButton.addEventListener('click', () => M.Modal.getInstance(modalFilter).open());
 
   view.ui.add(homeBtn, "top-left");
+  view.ui.add(layerListExpand, "top-right")
   view.ui.add(basemapExpand, "top-right")
   view.ui.add(filterButton, "top-left");
   view.ui.add(scaleBar, "bottom-right");
   view.ui.add(legendExpand, "bottom-left");
   view.navigation.browserTouchPanEnabled = true;
+  view.when(() => {
+    map.layers.add(viirsFloodClassified)
+    map.layers.add(goesImageryColorized)
+    map.layers.add(viirsThermalAnomalies)
+    map.layers.add(viirsWaterStates)
+    map.layers.add(viirsTrueColor)
+    map.layers.add(rfsLayer)
+  })  // layers should be added to webmaps after the view is ready
 
   const queryLayerForName = event => {
     regionsLayer
@@ -527,5 +576,5 @@ require([
   window.getRetrospectiveData = getRetrospectiveData
   window.updateLayerDefinitions = updateLayerDefinitions
   window.resetDefinitionExpression = resetDefinitionExpression
-  window.layer = layer
+  window.layer = rfsLayer
 })

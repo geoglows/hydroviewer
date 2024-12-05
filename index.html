@@ -18,8 +18,8 @@
   <script src="https://cdn.plot.ly/plotly-2.34.0.min.js" charset="utf-8"></script>
 
   <!-- ArcGIS JS -->
-  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css"/>
-  <script src="https://js.arcgis.com/4.30/"></script>
+  <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/4.31/esri/themes/light/main.css"/>
+  <script src="https://js.arcgis.com/4.31/"></script>
 
   <!-- App -->
   <link rel="stylesheet" href="/static/css/main.css"/>
@@ -81,7 +81,8 @@
         </select>
       </div>
       <div>
-        <label for="definitionString">Enter Custom SQL Filters (<a href="https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer/0">Visit the Esri Living Atlas</a>
+        <label for="definitionString">Enter Custom SQL Filters (<a href="https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer/0">Visit the Esri Living
+          Atlas</a>
           for all attribute options)</label>
         <input type="text" id="definitionString" placeholder=""/>
       </div>
@@ -100,14 +101,23 @@
 <div id="about-modal" class="modal bottom-sheet" style="height: 75%">
   <div class="modal-content" style="display: flex; flex-direction: column; align-items: center">
     <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%">
-      <h4>About GEOGLOWS</h4>
+      <h4>About</h4>
     </div>
-    <div style="width: 100%">
+    <div style="width: 100%; max-width: 800px">
       <p>
         To learn more about the GEOGLOWS project, visit <a href="https://www.geoglows.org" target="_blank">geoglows.org</a>.
+        For more information about the River Forecast System please visit <a href="https://geoglows.ecmwf.int" target="_blank">geoglows.ecmwf.int</a>.
+        For documentation and data download instructions, please consult <a href="https://data.geoglows.org" target="_blank">data.geoglows.org</a>.
       </p>
       <p>
-        Data downloads and documentation are available at <a href="https://data.geoglows.org" target="_blank">data.geoglows.org</a>.
+        More information about the NOAA map layers can be found at:
+      <ol>
+        <li>NOAA-20 VIIRS True Color: <a href="https://www.arcgis.com/home/item.html?id=c873f4c13aa54b25b01270df9358dc64" target="_blank">arcgis.com</a></li>
+        <li>NOAA-20 VIIRS Water States: <a href="https://www.arcgis.com/home/item.html?id=3695712d28354952923d2a26a176b767" target="_blank">arcgis.com</a></li>
+        <li>NOAA-20 VIIRS Thermal Anomalies: <a href="https://www.arcgis.com/home/item.html?id=dece90af1a0242dcbf0ca36d30276aa3" target="_blank">arcgis.com</a></li>
+        <li>NOAA GOES Colorized Infrared Weather Satellite (10 minute updates): <a href="https://www.arcgis.com/home/item.html?id=37a875ff3611496883b7ccca97f0f5f4" target="_blank">arcgis.com</a></li>
+        <li>NOAA-20 VIIRS Flood Composite: <a href="https://floods.ssec.wisc.edu/products/RIVER-FLDglobal-composite" target="_blank">University of Wisconsin Madison SSEC</a></li>
+      </ol>
       </p>
     </div>
   </div>
@@ -118,7 +128,7 @@
 
 <div class="body-wrapper">
   <div class="nav-bar-wrapper" style="background-color: #81d4fa">
-    <h4 style="font-size: 2rem; font-weight: bolder">GEOGLOWS</h4>
+    <h4 style="font-size: 2rem; font-weight: bolder">GEOGLOWS River Forecast System</h4>
     <div>
       <a class="btn dropdown-trigger" href="#" data-target="language-select"><i class="material-icons">translate</i></a>
       <ul id="language-select" class="dropdown-content">
