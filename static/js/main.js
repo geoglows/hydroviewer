@@ -245,7 +245,7 @@ require([
       })
   }
   const queryLayerForID = event => {
-    layer
+    rfsLayer
       .findSublayerById(0)
       .queryFeatures({
         geometry: event.mapPoint,
@@ -297,7 +297,7 @@ require([
   }
   const updateLayerDefinitions = expression => {
     expression = expression === undefined ? buildDefinitionExpression() : expression
-    layer.findSublayerById(0).definitionExpression = expression
+    rfsLayer.findSublayerById(0).definitionExpression = expression
     definitionExpression = expression
     definitionDiv.value = expression
     M.Modal.getInstance(modalFilter).close()
@@ -314,7 +314,7 @@ require([
     definitionString.value = ""
     // reset the definition expression to empty
     definitionExpression = ""
-    layer.findSublayerById(0).definitionExpression = definitionExpression
+    rfsLayer.findSublayerById(0).definitionExpression = definitionExpression
     definitionDiv.value = definitionExpression
     // update the hash
     setHashDefinition(definitionExpression)
