@@ -264,6 +264,7 @@ require([
             console.error(error)
             return reject()
           }
+          return response
         })
         .then(response => resolve(response))
         .catch(() => reject())
