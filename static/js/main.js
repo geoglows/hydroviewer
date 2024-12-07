@@ -18,17 +18,7 @@ require([
 
 //////////////////////////////////////////////////////////////////////// Constants Variables
   const REST_ENDPOINT = 'https://geoglows.ecmwf.int/api/v2'
-
   const ESRI_LAYER_URL = 'https://livefeeds3.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer'
-  const OSM_REGIONS_URL = 'https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/OSM_Regions_view/FeatureServer'
-  const OSM_WATERWAYS_NA = 'https://services6.arcgis.com/Do88DoK2xjTUCXd1/arcgis/rest/services/OSM_NA_Waterways/FeatureServer'
-  const OSM_WATERWAYS_CA = 'https://services6.arcgis.com/Do88DoK2xjTUCXd1/arcgis/rest/services/OSM_CA_Waterways/FeatureServer'
-  const OSM_WATERWAYS_SA = 'https://services6.arcgis.com/Do88DoK2xjTUCXd1/arcgis/rest/services/OSM_SA_Waterways/FeatureServer'
-  const OSM_WATERWAYS_EU = 'https://services-eu1.arcgis.com/zci5bUiJ8olAal7N/arcgis/rest/services/OpenStreetMap_Waterways_for_Europe/FeatureServer'
-  const OSM_WATERWAYS_AF = 'https://services-eu1.arcgis.com/zci5bUiJ8olAal7N/arcgis/rest/services/OSM_AF_Waterways/FeatureServer'
-  const OSM_WATERWAYS_AS = 'https://services-ap1.arcgis.com/iA7fZQOnjY9D67Zx/arcgis/rest/services/OSM_AS_Waterways/FeatureServer'
-  const OSM_WATERWAYS_AU = 'https://services-ap1.arcgis.com/iA7fZQOnjY9D67Zx/arcgis/rest/services/OSM_AU_Waterways/FeatureServer'
-
   const MIN_QUERY_ZOOM = 11
   const LOADING_GIF = '../static/img/loading.gif'
   const riverCountriesJSON = '../static/json/riverCountries.json'
@@ -72,7 +62,7 @@ require([
   let riverId
   let definitionExpression = ""
 
-// set the default date to 12 hours before now UTC time
+  // set the default date to 12 hours before now UTC time
   const now = new Date()
   now.setHours(now.getHours() - 12)
   inputForecastDate.value = now.toISOString().split("T")[0]
@@ -135,17 +125,6 @@ require([
     title: "GOES Weather Satellite Colorized Infrared Imagery",
     visible: false,
   })
-
-  const regionsLayer = new FeatureLayer({url: OSM_REGIONS_URL})
-  const waterwaysLayers = {
-    'north-america': new FeatureLayer({url: OSM_WATERWAYS_NA}),
-    'central-america': new FeatureLayer({url: OSM_WATERWAYS_CA}),
-    'south-america': new FeatureLayer({url: OSM_WATERWAYS_SA}),
-    'europe': new FeatureLayer({url: OSM_WATERWAYS_EU}),
-    'africa': new FeatureLayer({url: OSM_WATERWAYS_AF}),
-    'asia': new FeatureLayer({url: OSM_WATERWAYS_AS}),
-    'australia': new FeatureLayer({url: OSM_WATERWAYS_AU}),
-  }
 
   const map = new WebMap({
     portalItem: {id: "a69f14ea2e784e019f4a4b6835ffd376"},
@@ -220,66 +199,6 @@ require([
     map.layers.add(rfsLayer)
   })  // layers should be added to webmaps after the view is ready
 
-  const queryLayerForName = event => {
-    regionsLayer
-      .queryFeatures({
-        geometry: event.mapPoint,
-        spatialRelationship: "intersects",
-        outFields: ["*"],
-      })
-      .then(response => {
-        waterwaysLayers
-          [response.features[0].attributes.Name]
-          .queryFeatures({
-            geometry: event.mapPoint,
-            distance: 125,
-            units: "meters",
-            spatialRelationship: "intersects",
-            outFields: ["*"],
-            returnGeometry: true
-          })
-          .then(response => {
-            const name = response?.features[0]?.attributes?.name || text.status.unknown
-            riverName.innerHTML = `: ${name}`
-          })
-      })
-  }
-  const queryLayerForID = event => {
-    rfsLayer
-      .findSublayerById(0)
-      .queryFeatures({
-        geometry: event.mapPoint,
-        distance: 125,
-        units: "meters",
-        spatialRelationship: "intersects",
-        outFields: ["*"],
-        returnGeometry: true,
-        definitionExpression: definitionExpression,
-      })
-      .then(response => {
-        if (!response.features.length) {
-          M.toast({html: text.prompts.tryRiverAgain, classes: "red", displayDuration: 5000})
-          return
-        }
-        riverId = response.features[0].attributes.comid
-        if (riverId === "Null" || !riverId) {
-          updateStatusIcons({riverid: "fail"})
-          M.toast({html: text.prompts.tryRiverAgain, classes: "red", displayDuration: 5000})
-          console.error(error)
-          return
-        }
-        view.graphics.removeAll()
-        view.graphics.add({
-          geometry: response.features[0].geometry,
-          symbol: {
-            type: "simple-line",
-            color: [0, 0, 255],
-            width: 3
-          }
-        })
-        fetchData(riverId)
-      })
-  }
   const buildDefinitionExpression = () => {
     const riverCountry = M.FormSelect.getInstance(selectRiverCountry).getSelectedValues()
     const outletCountry = M.FormSelect.getInstance(selectOutletCountry).getSelectedValues()
@@ -320,7 +239,178 @@ require([
     setHashDefinition(definitionExpression)
   }
 
-//////////////////////////////////////////////////////////////////////// OTHER UTILITIES ON THE LEFT COLUMN
+//////////////////////////////////////////////////////////////////////// GET DATA FROM API AND MANAGING PLOTS
+  const searchLayerByClickPromise = (event) => {
+    return new Promise((resolve, reject) => {
+      rfsLayer
+        .findSublayerById(0)
+        .queryFeatures({
+          geometry: event.mapPoint,
+          distance: 125,
+          units: "meters",
+          spatialRelationship: "intersects",
+          outFields: ["*"],
+          returnGeometry: true,
+          definitionExpression: definitionExpression,
+        })
+        .then(response => {
+          if (!response.features.length) {
+            M.toast({html: text.prompts.tryRiverAgain, classes: "red", displayDuration: 5000})
+            return reject()
+          }
+          if (response.features[0].attributes.comid === "Null" || !response.features[0].attributes.comid) {
+            updateStatusIcons({riverid: "fail"})
+            M.toast({html: text.prompts.tryRiverAgain, classes: "red", displayDuration: 5000})
+            console.error(error)
+            return reject()
+          }
+        })
+        .then(response => resolve(response))
+        .catch(() => reject())
+    })
+  }
+  const fetchForecastPromise = riverid => {
+    return new Promise((resolve, reject) => {
+      fetch(`${REST_ENDPOINT}/forecast/${riverid}/?format=json&date=${inputForecastDate.value.replaceAll("-", "")}`)
+        .then(response => response.json())
+        .then(response => resolve(response))
+        .catch(() => reject())
+    })
+  }
+  const fetchRetroPromise = riverid => {
+    return new Promise((resolve, reject) => {
+      fetch(`${REST_ENDPOINT}/retrospective/${riverid}/?format=json`)
+        .then(response => response.json())
+        .then(response => resolve(response))
+        .catch(() => reject())
+    })
+  }
+  const plotForecast = (response, riverid) => {
+    chartForecast.innerHTML = ""
+    Plotly.newPlot(
+      chartForecast,
+      [
+        {
+          x: response.datetime.concat(response.datetime.slice().toReversed()),
+          y: response.flow_uncertainty_lower.concat(response.flow_uncertainty_upper.slice().toReversed()),
+          name: `${text.plots.fcLineUncertainty}`,
+          fill: 'toself',
+          fillcolor: 'rgba(44,182,255,0.6)',
+          line: {color: 'rgba(0,0,0,0)'}
+        },
+        {
+          x: response.datetime,
+          y: response.flow_uncertainty_lower,
+          line: {color: 'rgb(0,166,255)'},
+          showlegend: false,
+        },
+        {
+          x: response.datetime,
+          y: response.flow_uncertainty_upper,
+          line: {color: 'rgb(0,166,255)'},
+          showlegend: false,
+        },
+        {
+          x: response.datetime,
+          y: response.flow_median,
+          name: `${text.plots.fcLineMedian}`,
+          line: {color: 'black'}
+        },
+      ],
+      {
+        title: `${text.plots.fcTitle} ${riverid}`,
+        xaxis: {title: `${text.plots.fcXaxis} (UTC +00:00)`},
+        yaxis: {title: `${text.plots.fcYaxis} (m³/s)`},
+        legend: {'orientation': 'h'},
+      }
+    )
+  }
+  const plotRetro = response => {
+    const defaultDateRange = ['2015-01-01', new Date().toISOString().split("T")[0]]
+    chartRetro.innerHTML = ``
+    Plotly.newPlot(
+      chartRetro,
+      [
+        {
+          x: response.datetime,
+          y: response[riverId],
+        }
+      ],
+      {
+        title: `${text.plots.retroTitle} ${riverId}`,
+        yaxis: {title: `${text.plots.retroYaxis} (m³/s)`},
+        xaxis: {
+          title: `${text.plots.retroXaxis} (UTC +00:00)`,
+          autorange: false,
+          range: defaultDateRange,
+          rangeslider: {},
+          rangeselector: {
+            buttons: [
+              {
+                count: 1,
+                label: `1 ${text.words.year}`,
+                step: 'year',
+                stepmode: 'backward'
+              },
+              {
+                count: 5,
+                label: `5 ${text.words.years}`,
+                step: 'year',
+                stepmode: 'backward'
+              },
+              {
+                count: 10,
+                label: `10 ${text.words.years}`,
+                step: 'year',
+                stepmode: 'backward'
+              },
+              {
+                count: 30,
+                label: `30 ${text.words.years}`,
+                step: 'year',
+                stepmode: 'backward'
+              },
+              {
+                label: `${text.words.all}`,
+                count: response.datetime.length,
+                step: 'day',
+              }
+            ]
+          },
+          type: 'date'
+        }
+      }
+    )
+  }
+  const getForecastData = riverid => {
+    riverId = riverid ? riverid : riverId
+    if (!riverId) return
+    updateStatusIcons({forecast: "load"})
+    chartForecast.innerHTML = `<img alt="loading signal" src=${LOADING_GIF}>`
+    fetchForecastPromise(riverId)
+      .then(response => {
+        plotForecast(response, riverId)
+        updateStatusIcons({forecast: "ready"})
+      })
+      .catch(() => {
+        updateStatusIcons({forecast: "fail"})
+        giveForecastRetryButton(riverId)
+      })
+  }
+  const getRetrospectiveData = () => {
+    if (!riverId) return
+    updateStatusIcons({retro: "load"})
+    chartRetro.innerHTML = `<img alt="loading signal" src=${LOADING_GIF}>`
+    fetchRetroPromise(riverId)
+      .then(response => {
+        plotRetro(response)
+        updateStatusIcons({retro: "ready"})
+      })
+      .catch(() => {
+        updateStatusIcons({retro: "fail"})
+        giveRetrospectiveRetryButton(riverId)
+      })
+  }
   const fetchData = riverid => {
     riverId = riverid ? riverid : riverId
     if (!riverId) return updateStatusIcons({riverid: "fail"})
@@ -336,149 +426,6 @@ require([
     if (!riverId) return
     if (!/^\d{9}$/.test(riverId)) return alert(text.prompts.invalidRiverID)
     fetchData(parseInt(riverId))
-  }
-
-//////////////////////////////////////////////////////////////////////// UPDATE DOWNLOAD LINKS FUNCTION
-  const updateDownloadLinks = type => {
-    if (type === "clear") {
-      document.getElementById("download-forecast-link").href = ""
-      document.getElementById("download-retrospective-link").href = ""
-      document.getElementById("download-forecast-btn").disabled = true
-      document.getElementById("download-retrospective-btn").disabled = true
-    } else if (type === "set") {
-      document.getElementById("download-forecast-link").href = `${REST_ENDPOINT}/forecast/${riverId}`
-      document.getElementById("download-retrospective-link").href = `${REST_ENDPOINT}/retrospective/${riverId}`
-      document.getElementById("download-forecast-btn").disabled = false
-      document.getElementById("download-retrospective-btn").disabled = false
-    }
-  }
-
-//////////////////////////////////////////////////////////////////////// GET DATA FROM API AND MANAGING PLOTS
-  const getForecastData = riverid => {
-    riverId = riverid ? riverid : riverId
-    if (!riverId) return
-    chartForecast.innerHTML = `<img alt="loading signal" src=${LOADING_GIF}>`
-    updateStatusIcons({forecast: "load"})
-    fetch(
-      `${REST_ENDPOINT}/forecast/${riverId}/?format=json&date=${inputForecastDate.value.replaceAll("-", "")}`
-    )
-      .then(response => response.json())
-      .then(response => {
-        chartForecast.innerHTML = ``
-        Plotly.newPlot(
-          chartForecast,
-          [
-            {
-              x: response.datetime.concat(response.datetime.slice().toReversed()),
-              y: response.flow_uncertainty_lower.concat(response.flow_uncertainty_upper.slice().toReversed()),
-              name: `${text.plots.fcLineUncertainty}`,
-              fill: 'toself',
-              fillcolor: 'rgba(44,182,255,0.6)',
-              line: {color: 'rgba(0,0,0,0)'}
-            },
-            {
-              x: response.datetime,
-              y: response.flow_uncertainty_lower,
-              line: {color: 'rgb(0,166,255)'},
-              showlegend: false,
-            },
-            {
-              x: response.datetime,
-              y: response.flow_uncertainty_upper,
-              line: {color: 'rgb(0,166,255)'},
-              showlegend: false,
-            },
-            {
-              x: response.datetime,
-              y: response.flow_median,
-              name: `${text.plots.fcLineMedian}`,
-              line: {color: 'black'}
-            },
-          ],
-          {
-            title: `${text.plots.fcTitle} ${riverId}`,
-            xaxis: {title: `${text.plots.fcXaxis} (UTC +00:00)`},
-            yaxis: {title: `${text.plots.fcYaxis} (m³/s)`},
-            legend: {'orientation': 'h'},
-          }
-        )
-        updateStatusIcons({forecast: "ready"})
-      })
-      .catch(response => {
-        updateStatusIcons({forecast: "fail"})
-        giveForecastRetryButton(riverId)
-      })
-  }
-  const getRetrospectiveData = () => {
-    if (!riverId) return
-    updateStatusIcons({retro: "load"})
-    chartRetro.innerHTML = `<img alt="loading signal" src=${LOADING_GIF}>`
-    const defaultDateRange = ['2015-01-01', new Date().toISOString().split("T")[0]]
-    fetch(
-      `${REST_ENDPOINT}/retrospective/${riverId}/?format=json`
-    )
-      .then(response => response.json())
-      .then(response => {
-        chartRetro.innerHTML = ``
-        Plotly.newPlot(
-          chartRetro,
-          [
-            {
-              x: response.datetime,
-              y: response[riverId],
-            }
-          ],
-          {
-            title: `${text.plots.retroTitle} ${riverId}`,
-            yaxis: {title: `${text.plots.retroYaxis} (m³/s)`},
-            xaxis: {
-              title: `${text.plots.retroXaxis} (UTC +00:00)`,
-              autorange: false,
-              range: defaultDateRange,
-              rangeslider: {},
-              rangeselector: {
-                buttons: [
-                  {
-                    count: 1,
-                    label: `1 ${text.words.year}`,
-                    step: 'year',
-                    stepmode: 'backward'
-                  },
-                  {
-                    count: 5,
-                    label: `5 ${text.words.years}`,
-                    step: 'year',
-                    stepmode: 'backward'
-                  },
-                  {
-                    count: 10,
-                    label: `10 ${text.words.years}`,
-                    step: 'year',
-                    stepmode: 'backward'
-                  },
-                  {
-                    count: 30,
-                    label: `30 ${text.words.years}`,
-                    step: 'year',
-                    stepmode: 'backward'
-                  },
-                  {
-                    label: `${text.words.all}`,
-                    count: response.datetime.length,
-                    step: 'day',
-                  }
-                ]
-              },
-              type: 'date'
-            }
-          }
-        )
-        updateStatusIcons({retro: "ready"})
-      })
-      .catch(() => {
-        updateStatusIcons({retro: "fail"})
-        giveRetrospectiveRetryButton(riverId)
-      })
   }
 
 //////////////////////////////////////////////////////////////////////// Update
@@ -519,6 +466,19 @@ require([
   const giveRetrospectiveRetryButton = riverid => {
     clearChartDivs({chartTypes: "historical"})
     chartRetro.innerHTML = `<button class="btn btn-warning" onclick="window.getRetrospectiveData(${riverid})">${text.inputs.forecast}</button>`
+  }
+  const updateDownloadLinks = type => {
+    if (type === "clear") {
+      document.getElementById("download-forecast-link").href = ""
+      document.getElementById("download-retrospective-link").href = ""
+      document.getElementById("download-forecast-btn").disabled = true
+      document.getElementById("download-retrospective-btn").disabled = true
+    } else if (type === "set") {
+      document.getElementById("download-forecast-link").href = `${REST_ENDPOINT}/forecast/${riverId}`
+      document.getElementById("download-retrospective-link").href = `${REST_ENDPOINT}/retrospective/${riverId}`
+      document.getElementById("download-forecast-btn").disabled = false
+      document.getElementById("download-retrospective-btn").disabled = false
+    }
   }
 
 //////////////////////////////////////////////////////////////////////// HASH UPDATES
@@ -564,8 +524,20 @@ require([
     if (view.zoom < MIN_QUERY_ZOOM) return view.goTo({target: event.mapPoint, zoom: MIN_QUERY_ZOOM});
     M.toast({html: text.prompts.findingRiver, classes: "orange"})
     updateStatusIcons({riverid: "load", forecast: "clear", retro: "clear"})
-    queryLayerForName(event)
-    queryLayerForID(event)
+    searchLayerByClickPromise(event)
+      .then(response => {
+        riverId = response.features[0].attributes.comid
+        view.graphics.removeAll()
+        view.graphics.add({
+          geometry: response.features[0].geometry,
+          symbol: {
+            type: "simple-line",
+            color: [0, 0, 255],
+            width: 3
+          }
+        })
+        fetchData(riverId)
+      })
   })
   view.watch('extent', () => updateHash())
   window.addEventListener('hashchange', () => updateAppFromHash())
